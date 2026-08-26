@@ -5,7 +5,7 @@ import chalk from "chalk";
 
 console.log(
   chalk.bold.cyan("\n  ✦ LUMEN") +
-    chalk.gray(" v1.0.0") +
+    chalk.gray(" v1.1.0") +
     chalk.gray(
       "\n  Scaffold a React + Vite project with architecture choice\n"
     )

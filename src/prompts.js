@@ -40,7 +40,7 @@ function formatConfig(responses) {
     `• ${chalk.bold("Router:")} ${responses.router ? chalk.green("Yes") : chalk.red("No")}`,
     `• ${chalk.bold("State:")} ${chalk.blue(state)}`,
     `• ${chalk.bold("Icons:")} ${chalk.blue(responses.iconLibrary === "none" ? "None" : responses.iconLibrary === "lucide" ? "Lucide" : "Huge")}`,
-    `• ${chalk.bold("Axios:")} ${responses.axios ? chalk.green("Yes") : chalk.red("No")}`,
+    `• ${chalk.bold("API Client:")} ${responses.apiClient === "axios" ? chalk.green("Axios") : responses.apiClient === "fetch" ? chalk.yellow("Fetch") : chalk.red("None")}`,
     `• ${chalk.bold("Linter:")} ${responses.linter === "oxlint" ? chalk.green("Oxlint") : responses.linter === "eslint" ? chalk.yellow("ESLint") : chalk.red("None")}`,
     `• ${chalk.bold("Git:")} ${responses.gitInit ? chalk.green("Yes") : chalk.red("No")}`,
     `• ${chalk.bold("README:")} ${responses.readme ? chalk.green("Yes") : chalk.red("No")}`,
@@ -73,6 +73,9 @@ export async function getUserInputs(projectName) {
     useOldConfig = useExisting;
 
     if (useOldConfig) {
+      if (oldConfig.apiClient === undefined) {
+        oldConfig.apiClient = oldConfig.axios ? "axios" : "none";
+      }
       return { ...oldConfig, projectName };
     }
   }
@@ -95,7 +98,7 @@ export async function getUserInputs(projectName) {
       router: true,
       stateManagement: "none",
       iconLibrary: "none",
-      axios: false,
+      apiClient: "none",
       linter: "eslint",
       gitInit: false,
       readme: true,
@@ -183,11 +186,16 @@ export async function getUserInputs(projectName) {
   });
   if (isCancel(iconLibrary)) onCancel();
 
-  const axios = await confirm({
-    message: "Would you like to install Axios?",
-    initialValue: false,
+  const apiClient = await select({
+    message: "Which API client do you want to use?",
+    options: [
+      { label: "None", value: "none" },
+      { label: "Axios", value: "axios" },
+      { label: "Fetch (native)", value: "fetch" },
+    ],
+    initialValue: "none",
   });
-  if (isCancel(axios)) onCancel();
+  if (isCancel(apiClient)) onCancel();
 
   const gitInit = await confirm({
     message: "Would you like to initialize a Git repository?",
@@ -221,7 +229,7 @@ export async function getUserInputs(projectName) {
     router,
     stateManagement,
     iconLibrary,
-    axios,
+    apiClient,
     linter,
     gitInit,
     readme,

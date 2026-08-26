@@ -55,8 +55,8 @@ export async function installAllDeps(responses, pkg, cwd) {
     deps.push("@hugeicons/react", "@hugeicons/core-free-icons");
   }
 
-  // Axios
-  if (responses.axios) {
+  // API Client
+  if (responses.apiClient === "axios") {
     deps.push("axios");
   }
 

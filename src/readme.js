@@ -30,8 +30,10 @@ function buildBuiltWith(responses) {
     items.push("[Huge Icons](https://hugeicons.com/)");
   }
 
-  if (responses.axios) {
+  if (responses.apiClient === "axios") {
     items.push("[Axios](https://axios-http.com/)");
+  } else if (responses.apiClient === "fetch") {
+    items.push("Fetch API");
   }
 
   if (responses.testing === "vitest") {

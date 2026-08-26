@@ -84,12 +84,19 @@ export async function injectConditionals(projectPath, templatesDir, responses, a
     );
   }
 
-  // 4. Axios
-  if (responses.axios) {
+  // 4. API Client
+  if (responses.apiClient === "axios") {
     await injectOverlay(
       projectPath,
       templatesDir,
       `conditional/axios/${architecture}`,
+      language
+    );
+  } else if (responses.apiClient === "fetch") {
+    await injectOverlay(
+      projectPath,
+      templatesDir,
+      `conditional/fetch/${architecture}`,
       language
     );
   }
