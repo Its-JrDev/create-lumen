@@ -16,8 +16,10 @@ Creates a production-ready React + Vite project with:
 - **State management** — Zustand, Redux Toolkit, or none
 - **React Router** — client-side routing (optional)
 - **Testing** — Vitest or Jest (optional)
+- **Linter** — ESLint (default) or Oxlint
 - **Icon library** — Lucide React, Huge Icons, or none
 - **Axios** — pre-configured HTTP client (optional)
+- **README + LICENSE** — auto-generated (MIT)
 - **Git init** — auto-initialize a git repo
 - **Path alias** — `@/` imports configured out of the box
 
@@ -25,7 +27,7 @@ Your choices are cached and used as defaults next time.
 
 ## Quick start
 
-Run the CLI and follow the prompts. Accept defaults for the fastest setup:
+### From npm (recommended)
 
 ```bash
 npm create lumen my-app
@@ -33,9 +35,21 @@ cd my-app
 npm run dev
 ```
 
+### From this repo
+
+```bash
+git clone https://github.com/your_username/create-lumen.git
+cd create-lumen
+npm install
+npm link
+npx create-lumen my-app
+cd my-app
+npm run dev
+```
+
 ### Quick setup defaults
 
-TypeScript · Tailwind CSS · Feature-based · Router · Zustand · Vitest
+TypeScript · Tailwind CSS · Feature-based · Router · ESLint · Vitest
 
 ## Architecture
 
