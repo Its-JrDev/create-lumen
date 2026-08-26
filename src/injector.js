@@ -210,8 +210,8 @@ async function injectLinter(projectPath, templatesDir, linter, language) {
 }
 
 async function injectCreateFeatureScript(projectPath, templatesDir, language) {
-  const scriptSrc = path.join(templatesDir, "architectures", "feature-based", "scripts", "create-feature.js");
-  const scriptDest = path.join(projectPath, "scripts", "create-feature.js");
+  const scriptSrc = path.join(templatesDir, "architectures", "feature-based", "scripts", "create-feature.mjs");
+  const scriptDest = path.join(projectPath, "scripts", "create-feature.mjs");
 
   try {
     await fsp.access(scriptSrc);
@@ -224,6 +224,7 @@ async function injectCreateFeatureScript(projectPath, templatesDir, language) {
         .replace(/interfaces\/index\.ts/g, "interfaces/index.js")
         .replace(/services\/index\.ts/g, "services/index.js")
         .replace(/store\/index\.ts/g, "store/index.js")
+        .replace(/hooks\/index\.ts/g, "hooks/index.js")
         .replace(/pages\/index\.ts/g, "pages/index.js");
     }
 
@@ -236,7 +237,7 @@ async function injectCreateFeatureScript(projectPath, templatesDir, language) {
     const content = await fsp.readFile(pkgPath, "utf8");
     const pkg = JSON.parse(content);
     if (!pkg.scripts) pkg.scripts = {};
-    pkg.scripts["create:feature"] = "node scripts/create-feature.js";
+    pkg.scripts["create:feature"] = "node scripts/create-feature.mjs";
     await fsp.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
   } catch {}
 }

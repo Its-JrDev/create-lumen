@@ -18,6 +18,7 @@ const featureDir = path.join(process.cwd(), "src", "features", formattedName);
 // 2. Feature-First subdirectories
 const subdirectories = [
   "components",
+  "hooks",
   "interfaces",
   "layouts",
   "pages",
