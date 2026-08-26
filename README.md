@@ -1,33 +1,12 @@
 # create-lumen
 
-Scaffold a React + Vite project with your choice of **feature-based** or **component-based** architecture.
+A scaffolder that generates production-ready React + Vite projects (feature-based or component-based).
 
-```bash
-npm create lumen
-```
+Note: this repository is the CLI scaffolder itself, not a generated app. Generated projects live in the target folder you create.
 
-## What it does
+## Quick usage
 
-Creates a production-ready React + Vite project with:
-
-- **Architecture choice** — feature-based (domain-driven) or component-based (grouped by type)
-- **TypeScript or JavaScript**
-- **CSS framework** — Tailwind CSS, Bootstrap, or vanilla CSS
-- **State management** — Zustand, Redux Toolkit, or none
-- **React Router** — client-side routing (optional)
-- **Testing** — Vitest or Jest (optional)
-- **Linter** — ESLint (default) or Oxlint
-- **Icon library** — Lucide React, Huge Icons, or none
-- **Axios** — pre-configured HTTP client (optional)
-- **README + LICENSE** — auto-generated (MIT)
-- **Git init** — auto-initialize a git repo
-- **Path alias** — `@/` imports configured out of the box
-
-Your choices are cached and used as defaults next time.
-
-## Quick start
-
-### From npm (recommended)
+From npm (recommended):
 
 ```bash
 npm create lumen my-app
@@ -35,76 +14,118 @@ cd my-app
 npm run dev
 ```
 
-### From this repo
+Run the scaffolder locally (development / testing the generator):
 
 ```bash
-git clone https://github.com/Its-JrDev/create-lumen.git
-cd create-lumen
+node bin/cli.js           # run interactively
 npm install
-npm link
-npx create-lumen my-app
-cd my-app
-npm run dev
+npm link                 # install globally for testing
+create-lumen my-app      # after npm link
 ```
 
-### Quick setup defaults
+## Features
 
-TypeScript · Tailwind CSS · Feature-based · Router · ESLint · Vitest
+- Architecture choice: feature-based or component-based
+- TypeScript or JavaScript output
+- CSS frameworks: Tailwind, Bootstrap, or none
+- Optional state management: Zustand or Redux Toolkit
+- Optional router (React Router)
+- Optional testing: Vitest or Jest
+- Linting: ESLint (default) or Oxlint
+- Optional Axios setup and icon libraries
+- Auto `git init`, generated `README` and `LICENSE`
+- `@/` path alias configured
 
-## Architecture
+Your selected options are cached and offered as defaults on subsequent runs.
 
-### Feature-based
+## Developing the scaffolder
 
-Organized by domain. Each feature is self-contained:
+- Entry point: `bin/cli.js` → `src/main.js` (ESM-only)
+- Templates: `templates/` (architectures + conditional overlays)
+- Injector copies architecture, then overlays conditionals based on choices
+- Config cache: `~/.lumen-config.json` stores previous choices
+- This tool uses Node >= 18 and `execa` for subprocesses
 
-```
-src/
-├── app/              # App root
-├── features/
-│   └── home/
-│       ├── pages/
-│       ├── components/
-│       └── services/
-├── layouts/
-├── pages/
-├── routes/
-├── store/
-├── hooks/
-└── utils/
-```
-
-Scaffold new features instantly:
+Run locally (interactive):
 
 ```bash
-npm run create:feature auth
+node bin/cli.js
 ```
 
-### Component-based
+Install globally for testing:
 
-Organized by type. Components grouped by their role:
+```bash
+npm link
+create-lumen my-app
+```
+
+## Project structure (generated app examples)
+
+Feature-based (example):
 
 ```
 src/
-├── components/
-│   ├── common/       # Shared, reusable
-│   ├── form/         # Form elements
-│   └── layout/       # Layout primitives
-├── pages/
-├── layouts/
-├── routes/
-├── store/
-├── hooks/
-└── utils/
+├── app
+│   ├── App.tsx
+│   ├── providers
+│   │   └── ThemeProvider.tsx
+│   └── router.tsx
+├── components
+│   └── ui
+├── config
+│   └── constants.ts
+├── features
+│   └── logout
+│       ├── components
+│       ├── interfaces
+│       ├── layouts
+│       ├── pages
+│       ├── services
+│       └── store
+├── hooks
+│   ├── index.ts
+│   └── useLocalStorage.ts
+├── index.css
+├── lib
+├── main.tsx
+├── stores
+├── styles
+│   └── globals.css
+├── test
+│   └── setup.ts
+├── types
+└── utils
 ```
 
-## Path alias
+Component-based (example):
 
-All projects use the `@/` path alias:
-
-```tsx
-import { Button } from "@/components/common/Button";
-import { useAuth } from "@/hooks/useAuth";
 ```
+src/
+├── App.tsx
+├── components
+│   ├── common
+│   ├── form
+│   └── layout
+├── config
+│   ├── constants.ts
+│   └── routes.ts
+├── context
+├── hooks
+├── index.css
+├── layouts
+├── main.tsx
+├── pages
+├── routes
+├── services
+├── store
+├── styles
+├── test
+└── utils
+```
+
+## Roadmap
+
+See `docs/ROADMAP.md` for planned features and upcoming releases.
 
 ## Requirements
 
