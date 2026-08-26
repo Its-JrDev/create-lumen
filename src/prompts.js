@@ -80,7 +80,7 @@ export async function getUserInputs(projectName) {
   // Quick Setup
   const quickSetup = await confirm({
     message:
-      "Quick Setup? (TypeScript + Tailwind + Feature-based + Router + Vitest)",
+      "Quick Setup? (TypeScript + Tailwind + Feature-based + Router + ESLint + Vitest)",
     initialValue: true,
   });
   if (isCancel(quickSetup)) onCancel();
