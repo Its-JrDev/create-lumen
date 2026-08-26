@@ -42,6 +42,7 @@ function formatConfig(responses) {
     `• ${chalk.bold("Icons:")} ${chalk.blue(responses.iconLibrary === "none" ? "None" : responses.iconLibrary === "lucide" ? "Lucide" : "Huge")}`,
     `• ${chalk.bold("Axios:")} ${responses.axios ? chalk.green("Yes") : chalk.red("No")}`,
     `• ${chalk.bold("Git:")} ${responses.gitInit ? chalk.green("Yes") : chalk.red("No")}`,
+    `• ${chalk.bold("README:")} ${responses.readme ? chalk.green("Yes") : chalk.red("No")}`,
   ].join("\n");
 }
 
@@ -95,6 +96,7 @@ export async function getUserInputs(projectName) {
       iconLibrary: "none",
       axios: false,
       gitInit: false,
+      readme: true,
     };
     await saveConfig(responses);
     return responses;
@@ -191,6 +193,12 @@ export async function getUserInputs(projectName) {
   });
   if (isCancel(gitInit)) onCancel();
 
+  const readme = await confirm({
+    message: "Would you like to generate a README.md and LICENSE?",
+    initialValue: true,
+  });
+  if (isCancel(readme)) onCancel();
+
   const responses = {
     projectName,
     architecture,
@@ -202,6 +210,7 @@ export async function getUserInputs(projectName) {
     iconLibrary,
     axios,
     gitInit,
+    readme,
   };
 
   await saveConfig(responses);

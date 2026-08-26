@@ -13,6 +13,7 @@ import { handleDevServer } from "./utils/dev-server.js";
 import { getUserInputs, onCancel } from "./prompts.js";
 import { runBaseInstall, runGitInit, runViteCreate } from "./scaffold.js";
 import { installAllDeps } from "./dependencies.js";
+import { generateReadme } from "./readme.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -163,6 +164,19 @@ export async function main() {
   // 12. Cleanup boilerplate
   await cleanupBoilerplate(projectPath);
 
+  // 13. Generate README.md + LICENSE (if requested)
+  if (responses.readme) {
+    const readmeSpin = spinner();
+    readmeSpin.start("Generating README.md and LICENSE...");
+    try {
+      await generateReadme(projectPath, projectName, responses);
+      readmeSpin.stop(chalk.green("README.md and LICENSE generated."));
+    } catch (err) {
+      readmeSpin.stop(chalk.red("Failed to generate README.md and LICENSE."));
+      throw err;
+    }
+  }
+
   log.step(chalk.green("\nProject setup complete!"));
   log.message(
     chalk.gray(
@@ -170,6 +184,6 @@ export async function main() {
     )
   );
 
-  // 13. Offer dev server
+  // 14. Offer dev server
   await handleDevServer(pkg, projectName);
 }
