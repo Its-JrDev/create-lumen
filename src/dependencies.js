@@ -79,6 +79,16 @@ export async function installAllDeps(responses, pkg, cwd) {
     );
   }
 
+  // Linter
+  if (responses.linter === "eslint") {
+    devDeps.push("eslint", "@eslint/js", "eslint-plugin-react-hooks", "eslint-plugin-react-refresh", "globals");
+    if (responses.language === "ts") {
+      devDeps.push("typescript-eslint");
+    }
+  } else if (responses.linter === "oxlint") {
+    devDeps.push("oxlint");
+  }
+
   // Always re-install react + react-dom for consistency
   deps.push("react", "react-dom");
 

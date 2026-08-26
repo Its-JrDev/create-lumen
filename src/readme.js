@@ -40,6 +40,12 @@ function buildBuiltWith(responses) {
     items.push("[Jest](https://jestjs.io/)");
   }
 
+  if (responses.linter === "eslint") {
+    items.push("[ESLint](https://eslint.org/)");
+  } else if (responses.linter === "oxlint") {
+    items.push("[Oxlint](https://oxc.rs/)");
+  }
+
   return items.map((item) => `- ${item}`).join("\n");
 }
 
@@ -52,6 +58,13 @@ function buildScripts(responses) {
 
   if (responses.testing !== "none") {
     rows.push("| `npm run test` | Run tests |");
+  }
+
+  if (responses.linter === "eslint") {
+    rows.push("| `npm run lint` | Run ESLint |");
+    rows.push("| `npm run lint:fix` | Run ESLint with auto-fix |");
+  } else if (responses.linter === "oxlint") {
+    rows.push("| `npm run lint` | Run Oxlint |");
   }
 
   return rows.join("\n");

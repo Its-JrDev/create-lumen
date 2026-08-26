@@ -1,0 +1,9 @@
+{
+  "$schema": "./oxlintrc.json",
+  "rules": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "nursery": "warn"
+  },
+  "plugins": ["react", "react-hooks", "import"]
+}

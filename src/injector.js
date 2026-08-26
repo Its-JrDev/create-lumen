@@ -101,7 +101,14 @@ export async function injectConditionals(projectPath, templatesDir, responses, a
     await injectTesting(projectPath, templatesDir, "jest", language, architecture);
   }
 
-  // 6. Create feature script (feature-based only)
+  // 6. Linter
+  if (responses.linter === "eslint") {
+    await injectLinter(projectPath, templatesDir, "eslint", language);
+  } else if (responses.linter === "oxlint") {
+    await injectLinter(projectPath, templatesDir, "oxlint", language);
+  }
+
+  // 7. Create feature script (feature-based only)
   if (architecture === "feature-based") {
     await injectCreateFeatureScript(projectPath, templatesDir, language);
   }
@@ -163,6 +170,40 @@ async function injectTesting(projectPath, templatesDir, framework, language, arc
     } else {
       pkg.scripts.test = "jest";
       pkg.scripts["test:watch"] = "jest --watch";
+    }
+    await fsp.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
+  } catch {}
+}
+
+async function injectLinter(projectPath, templatesDir, linter, language) {
+  const lintingDir = path.join(templatesDir, "conditional", "linting", linter);
+
+  if (linter === "eslint") {
+    const configExt = language === "ts" ? "ts" : "js";
+    const configSrc = path.join(lintingDir, `eslint.config.${configExt}`);
+    try {
+      await fsp.access(configSrc);
+      await fsp.copyFile(configSrc, path.join(projectPath, `eslint.config.${configExt}`));
+    } catch {}
+  } else if (linter === "oxlint") {
+    const configSrc = path.join(lintingDir, "oxlintrc.json");
+    try {
+      await fsp.access(configSrc);
+      await fsp.copyFile(configSrc, path.join(projectPath, "oxlintrc.json"));
+    } catch {}
+  }
+
+  // Add lint script to package.json
+  const pkgPath = path.join(projectPath, "package.json");
+  try {
+    const content = await fsp.readFile(pkgPath, "utf8");
+    const pkg = JSON.parse(content);
+    if (!pkg.scripts) pkg.scripts = {};
+    if (linter === "eslint") {
+      pkg.scripts.lint = "eslint .";
+      pkg.scripts["lint:fix"] = "eslint . --fix";
+    } else {
+      pkg.scripts.lint = "oxlint .";
     }
     await fsp.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
   } catch {}

@@ -41,6 +41,7 @@ function formatConfig(responses) {
     `• ${chalk.bold("State:")} ${chalk.blue(state)}`,
     `• ${chalk.bold("Icons:")} ${chalk.blue(responses.iconLibrary === "none" ? "None" : responses.iconLibrary === "lucide" ? "Lucide" : "Huge")}`,
     `• ${chalk.bold("Axios:")} ${responses.axios ? chalk.green("Yes") : chalk.red("No")}`,
+    `• ${chalk.bold("Linter:")} ${responses.linter === "oxlint" ? chalk.green("Oxlint") : responses.linter === "eslint" ? chalk.yellow("ESLint") : chalk.red("None")}`,
     `• ${chalk.bold("Git:")} ${responses.gitInit ? chalk.green("Yes") : chalk.red("No")}`,
     `• ${chalk.bold("README:")} ${responses.readme ? chalk.green("Yes") : chalk.red("No")}`,
   ].join("\n");
@@ -95,6 +96,7 @@ export async function getUserInputs(projectName) {
       stateManagement: "none",
       iconLibrary: "none",
       axios: false,
+      linter: "eslint",
       gitInit: false,
       readme: true,
     };
@@ -193,6 +195,17 @@ export async function getUserInputs(projectName) {
   });
   if (isCancel(gitInit)) onCancel();
 
+  const linter = await select({
+    message: "Which linter do you want to use?",
+    options: [
+      { label: "ESLint", value: "eslint", hint: "Industry standard JavaScript linter (Recommended)" },
+      { label: "Oxlint", value: "oxlint", hint: "Fast Rust-based linter" },
+      { label: "None", value: "none" },
+    ],
+    initialValue: "eslint",
+  });
+  if (isCancel(linter)) onCancel();
+
   const readme = await confirm({
     message: "Would you like to generate a README.md and LICENSE?",
     initialValue: true,
@@ -209,6 +222,7 @@ export async function getUserInputs(projectName) {
     stateManagement,
     iconLibrary,
     axios,
+    linter,
     gitInit,
     readme,
   };
