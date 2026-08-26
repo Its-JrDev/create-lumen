@@ -24,14 +24,22 @@ export async function main() {
   const pkg = getPkgManager();
 
   // 1. Project name
-  const projectName = await text({
-    message: "What is your project name?",
-    placeholder: "my-app",
-    validate(value) {
-      if (!value || !value.trim()) return "Project name is required!";
-    },
-  });
-  if (isCancel(projectName)) onCancel();
+  const cliArg = process.argv[2];
+  let projectName;
+
+  if (cliArg && cliArg.trim()) {
+    projectName = cliArg.trim();
+    log.step(chalk.gray(`Project name: ${chalk.bold(projectName)}`));
+  } else {
+    projectName = await text({
+      message: "What is your project name?",
+      placeholder: "my-app",
+      validate(value) {
+        if (!value || !value.trim()) return "Project name is required!";
+      },
+    });
+    if (isCancel(projectName)) onCancel();
+  }
 
   // 2. Handle existing folder
   await confirmEmptyFolder(projectName);
