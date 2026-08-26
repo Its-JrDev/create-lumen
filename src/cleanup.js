@@ -1,6 +1,7 @@
-import { cleanDir } from "./utils/fs.js";
+import { deleteIfExists } from "./utils/fs.js";
 
 export async function cleanupBoilerplate(projectPath) {
-  await cleanDir(`${projectPath}/public`);
-  await cleanDir(`${projectPath}/src/assets`);
+  await deleteIfExists(`${projectPath}/public`);
+  await deleteIfExists(`${projectPath}/src/assets`);
+  await deleteIfExists(`${projectPath}/.oxlintrc.json`);
 }

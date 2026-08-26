@@ -79,7 +79,7 @@ export async function injectConditionals(projectPath, templatesDir, responses, a
     await injectOverlay(
       projectPath,
       templatesDir,
-      `conditional/icons/${responses.iconLibrary}`,
+      `conditional/icons/${responses.iconLibrary}/${architecture}`,
       language
     );
   }
