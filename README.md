@@ -38,7 +38,7 @@ npm run dev
 ### From this repo
 
 ```bash
-git clone https://github.com/your_username/create-lumen.git
+git clone https://github.com/Its-JrDev/create-lumen.git
 cd create-lumen
 npm install
 npm link
