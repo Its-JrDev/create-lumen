@@ -1,0 +1,234 @@
+import { promises as fsp } from "fs";
+import path from "path";
+import { copyDirRecursive, writeFileRecursive } from "./utils/fs.js";
+
+export async function injectArchitecture(projectPath, templatesDir, architecture, language) {
+  const ext = language === "ts" ? "tsx" : "jsx";
+  const srcDir = path.join(templatesDir, "architectures", architecture, "src");
+
+  // Remove Vite's default App files BEFORE copying architecture
+  const defaultAppTsx = path.join(projectPath, "src", "App.tsx");
+  const defaultAppJsx = path.join(projectPath, "src", "App.jsx");
+  try { await fsp.rm(defaultAppTsx, { force: true }); } catch {}
+  try { await fsp.rm(defaultAppJsx, { force: true }); } catch {}
+
+  // Copy the architecture tree into the project's src/
+  await copyDirRecursive(srcDir, path.join(projectPath, "src"), (name) => {
+    // Skip files that don't match the language
+    if (language === "ts" && name.endsWith(".jsx")) return false;
+    if (language === "js" && name.endsWith(".tsx")) return false;
+    // Skip .ts files when JS, skip .js when TS (for non-component files)
+    if (language === "ts" && name.endsWith(".js") && !name.endsWith(".config.js")) return false;
+    if (language === "js" && name.endsWith(".ts") && !name.endsWith(".config.ts")) return false;
+    return true;
+  });
+
+  // Copy the architecture's main.tsx/main.jsx to src/main.{ext}
+  const mainSrc = path.join(
+    templatesDir,
+    "architectures",
+    architecture,
+    `main.${ext}`
+  );
+  try {
+    await fsp.access(mainSrc);
+    await fsp.copyFile(mainSrc, path.join(projectPath, "src", `main.${ext}`));
+  } catch {
+    // main file doesn't exist in template, skip
+  }
+
+  // Remove the opposite language's main file (Vite creates main.jsx by default)
+  const oppositeExt = language === "ts" ? "jsx" : "tsx";
+  const oppositeMain = path.join(projectPath, "src", `main.${oppositeExt}`);
+  try { await fsp.rm(oppositeMain, { force: true }); } catch {}
+}
+
+export async function injectConditionals(projectPath, templatesDir, responses, architecture, language) {
+  const ext = language === "ts" ? "tsx" : "jsx";
+
+  // 1. State management
+  if (responses.stateManagement === "redux") {
+    await injectOverlay(
+      projectPath,
+      templatesDir,
+      `conditional/state/redux/${architecture}`,
+      language
+    );
+    await updateMainWithProvider(projectPath, "redux", architecture, ext);
+  } else if (responses.stateManagement === "zustand") {
+    await injectOverlay(
+      projectPath,
+      templatesDir,
+      `conditional/state/zustand/${architecture}`,
+      language
+    );
+  }
+
+  // 2. Router (overwrites App.tsx with routed version)
+  if (responses.router) {
+    await injectOverlay(
+      projectPath,
+      templatesDir,
+      `conditional/router/${architecture}`,
+      language
+    );
+  }
+
+  // 3. Icons (overwrites home page)
+  if (responses.iconLibrary && responses.iconLibrary !== "none") {
+    await injectOverlay(
+      projectPath,
+      templatesDir,
+      `conditional/icons/${responses.iconLibrary}`,
+      language
+    );
+  }
+
+  // 4. Axios
+  if (responses.axios) {
+    await injectOverlay(
+      projectPath,
+      templatesDir,
+      `conditional/axios/${architecture}`,
+      language
+    );
+  }
+
+  // 5. Testing
+  if (responses.testing === "vitest") {
+    await injectTesting(projectPath, templatesDir, "vitest", language, architecture);
+  } else if (responses.testing === "jest") {
+    await injectTesting(projectPath, templatesDir, "jest", language, architecture);
+  }
+
+  // 6. Create feature script (feature-based only)
+  if (architecture === "feature-based") {
+    await injectCreateFeatureScript(projectPath, templatesDir, language);
+  }
+}
+
+async function injectOverlay(projectPath, templatesDir, overlayPath, language) {
+  const srcDir = path.join(templatesDir, overlayPath, "src");
+  try {
+    await fsp.access(srcDir);
+    await copyDirRecursive(srcDir, path.join(projectPath, "src"), (name) => {
+      if (language === "ts" && name.endsWith(".jsx")) return false;
+      if (language === "js" && name.endsWith(".tsx")) return false;
+      if (language === "ts" && name.endsWith(".js") && !name.endsWith(".config.js")) return false;
+      if (language === "js" && name.endsWith(".ts") && !name.endsWith(".config.ts")) return false;
+      return true;
+    });
+  } catch {
+    // overlay src dir doesn't exist
+  }
+}
+
+async function injectTesting(projectPath, templatesDir, framework, language, architecture) {
+  const testingDir = path.join(templatesDir, "conditional", "testing", framework);
+
+  // Copy config files to project root
+  const configExt = language === "ts" ? "ts" : "js";
+  const configSrc = path.join(testingDir, `${framework}.config.${configExt}`);
+  try {
+    await fsp.access(configSrc);
+    await fsp.copyFile(configSrc, path.join(projectPath, `${framework}.config.${configExt}`));
+  } catch {}
+
+  // Copy setup file
+  const setupSrc = path.join(testingDir, `src/test/setup.${configExt}`);
+  try {
+    await fsp.access(setupSrc);
+    const setupDest = path.join(projectPath, "src", "test", `setup.${configExt}`);
+    await writeFileRecursive(setupDest, await fsp.readFile(setupSrc, "utf8"));
+  } catch {}
+
+  // Copy test file
+  const testExt = language === "ts" ? "tsx" : "jsx";
+  const testSrc = path.join(testingDir, `src/__tests__/App.test.${testExt}`);
+  try {
+    await fsp.access(testSrc);
+    const testDest = path.join(projectPath, "src", "__tests__", `App.test.${testExt}`);
+    await writeFileRecursive(testDest, await fsp.readFile(testSrc, "utf8"));
+  } catch {}
+
+  // Add test script to package.json
+  const pkgPath = path.join(projectPath, "package.json");
+  try {
+    const content = await fsp.readFile(pkgPath, "utf8");
+    const pkg = JSON.parse(content);
+    if (!pkg.scripts) pkg.scripts = {};
+    if (framework === "vitest") {
+      pkg.scripts.test = "vitest";
+      pkg.scripts["test:run"] = "vitest run";
+    } else {
+      pkg.scripts.test = "jest";
+      pkg.scripts["test:watch"] = "jest --watch";
+    }
+    await fsp.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
+  } catch {}
+}
+
+async function injectCreateFeatureScript(projectPath, templatesDir, language) {
+  const scriptSrc = path.join(templatesDir, "architectures", "feature-based", "scripts", "create-feature.js");
+  const scriptDest = path.join(projectPath, "scripts", "create-feature.js");
+
+  try {
+    await fsp.access(scriptSrc);
+    let content = await fsp.readFile(scriptSrc, "utf8");
+
+    // Adapt to JS if needed
+    if (language === "js") {
+      // Replace .ts extensions with .js in the initialFiles
+      content = content
+        .replace(/interfaces\/index\.ts/g, "interfaces/index.js")
+        .replace(/services\/index\.ts/g, "services/index.js")
+        .replace(/store\/index\.ts/g, "store/index.js")
+        .replace(/pages\/index\.ts/g, "pages/index.js");
+    }
+
+    await writeFileRecursive(scriptDest, content);
+  } catch {}
+
+  // Add script to package.json
+  const pkgPath = path.join(projectPath, "package.json");
+  try {
+    const content = await fsp.readFile(pkgPath, "utf8");
+    const pkg = JSON.parse(content);
+    if (!pkg.scripts) pkg.scripts = {};
+    pkg.scripts["create:feature"] = "node scripts/create-feature.js";
+    await fsp.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
+  } catch {}
+}
+
+async function updateMainWithProvider(projectPath, stateType, architecture, ext) {
+  const mainPath = path.join(projectPath, "src", `main.${ext}`);
+  try {
+    let content = await fsp.readFile(mainPath, "utf8");
+
+    if (architecture === "feature-based") {
+      if (!content.includes("StoreProvider")) {
+        content = content.replace(
+          /import App from ['"]@\/app\/App['"]\n?/,
+          "import App from '@/app/App'\nimport { StoreProvider } from '@/app/providers/StoreProvider'\n"
+        );
+        content = content.replace(
+          /<App \/>/,
+          "<StoreProvider>\n        <App />\n      </StoreProvider>"
+        );
+      }
+    } else {
+      if (!content.includes("StoreProvider")) {
+        content = content.replace(
+          /import App from ['"]\.\/App['"]\n?/,
+          "import App from './App'\nimport { StoreProvider } from './context/StoreProvider'\n"
+        );
+        content = content.replace(
+          /<App \/>/,
+          "<StoreProvider>\n        <App />\n      </StoreProvider>"
+        );
+      }
+    }
+
+    await fsp.writeFile(mainPath, content, "utf8");
+  } catch {}
+}
