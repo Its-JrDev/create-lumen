@@ -21,16 +21,28 @@ const __dirname = path.dirname(__filename);
 const TEMPLATES_DIR = path.join(__dirname, "../templates");
 const CURRENT_DIR = process.cwd();
 
+export function resolveProjectName({ quickSetup = false, projectName: nameArg, cwd = CURRENT_DIR } = {}) {
+  const cliArg = nameArg || process.argv[2];
+  if (cliArg && cliArg.trim()) {
+    return cliArg.trim();
+  }
+
+  if (quickSetup) {
+    const defaultName = path.basename(cwd).trim() || "my-app";
+    return defaultName === "." ? "my-app" : defaultName;
+  }
+
+  return null;
+}
+
 export async function main(options = {}) {
   const { quickSetup = false, projectName: nameArg } = options;
   const pkg = getPkgManager();
 
   // 1. Project name
-  const cliArg = nameArg || process.argv[2];
-  let projectName;
+  let projectName = resolveProjectName({ quickSetup, projectName: nameArg, cwd: CURRENT_DIR });
 
-  if (cliArg && cliArg.trim()) {
-    projectName = cliArg.trim();
+  if (projectName) {
     log.step(chalk.gray(`Project name: ${chalk.bold(projectName)}`));
   } else {
     projectName = await text({
