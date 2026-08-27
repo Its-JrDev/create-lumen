@@ -1,59 +1,117 @@
-# Future Implementations & Roadmap
+# Roadmap &amp; Changelog
 
-This document outlines the development plan and structural changes for the upcoming CLI tool versions.
+This document records what has shipped in each `create-lumen` release and the
 
----
+ideas being considered for future versions. Released sections describe the actual
 
-## 📦 Version 1.2.0: Prettier & Oxfmt Integration
+behavior of the published CLI; the Future section is proposal-only and not yet
 
-This update introduces dynamic code formatter support (`Prettier` and `Oxfmt`) based on the linter chosen by the user. This improves performance and overall developer experience.
-
-### Dynamic Prompt Flow
-
-The CLI will adapt its questions dynamically depending on the user's previous choices:
-
-1. **Linter Selection:**
-   ```text
-   ? Which linter do you want to use?
-    ❯ ESLint
-      Oxlint
-      None
-   ```
-
-2. **Formatter Selection (Conditional):**
-   * **If ESLint is chosen:**
-     ```text
-     ? Which formatter do you want to use?
-      ❯ None
-        Prettier
-     ```
-   * **If Oxlint is chosen:**
-     ```text
-     ? Which formatter do you want to use?
-      ❯ None
-        Oxfmt (Recommended)    ← native Ox ecosystem, 30x faster
-        Prettier
-     ```
+scheduled.
 
 ---
 
-### Dependency Matrix
+## 📦 Version 1.0.0 (Released) — Initial release
 
-| Linter | Formatter | `devDependencies` to Install |
-| :--- | :--- | :--- |
-| **ESLint** | Prettier | `prettier`, `eslint-config-prettier` |
-| **Oxlint** | Oxfmt | `oxfmt` |
-| **Oxlint** | Prettier | `prettier` |
-| **None** | — | None |
+The baseline scaffolder. Generates a production-ready React + Vite project and
+
+lets the user pick an architecture and a set of optional features through an
+
+interactive prompt flow.
+
+### Features
+
+- Architecture choice: **feature-based** or **component-based**
+- Language: **TypeScript** or **JavaScript**
+- CSS frameworks: **Tailwind**, **Bootstrap**, or **none**
+- Optional state management: **Zustand** or **Redux Toolkit**
+- Optional **React Router**
+- Optional testing: **Vitest** or **Jest**
+- Linting: **ESLint** (default) or **Oxlint**
+- Optional **Axios** data-fetching setup and icon libraries (**lucide**, **huge**)
+- Auto `git init`, generated `README.md` and `LICENSE`
+- `@/` path alias configured (`tsconfig`/`jsconfig` + Vite)
+
+### How it works
+
+- `bin/cli.js` → `src/main.js` orchestrates: `npm create vite` → base install →
+
+  inject architecture → apply conditional overlays → install conditional deps →
+
+  CSS setup → configure aliases/scripts → cleanup → README.
+- Templates: `templates/architectures/{feature-based,component-based}` (base trees)
+
+  and `templates/conditional/{state,router,icons,axios,fetch,testing,linting}`
+
+  (overlays selected by choices).
+- `@/` alias is wired into `vite.config` for non-Tailwind setups; Tailwind uses
+
+  its own `vite.config` template.
+- Choices are cached in `~/.lumen-config.json` and offered as defaults on
+
+  re-runs.
 
 ---
 
-### Default Configuration Files
+## 📦 Version 1.1.0 (In Revision) — Prettier &amp; Oxfmt integration
 
-#### Oxfmt Configuration (`.oxfmtrc.json`)
+Dynamic code formatter support based on the chosen linter. This improves
+
+consistency and developer experience by scaffolding the formatter config and
+
+`format` scripts automatically.
+
+### Dynamic prompt flow
+
+1. **Linter selection:** ESLint / Oxlint / None.
+2. **Formatter selection (conditional on the linter):**
+  - ESLint → None | Prettier
+  - Oxlint → None | Oxfmt (recommended) | Prettier
+
+### What shipped
+
+- `templates/conditional/formatter/prettier/.prettierrc` and
+
+  `templates/conditional/formatter/oxfmt/.oxfmtrc.json`.
+- `injectFormatter()` in `src/injector.js` copies the config and appends
+
+  `format` / `format:check` (`prettier --write .` / `prettier --check .`) or
+
+  `format` (`oxfmt .`) scripts to `package.json`.
+- `eslint-config-prettier` wired as the **last** element of `eslint.config` for
+
+  the ESLint + Prettier combo — handling both the JS array form and the TS
+
+  `tseslint.config(...)` form.
+- `src/dependencies.js` installs `prettier`, `eslint-config-prettier`, or `oxfmt`
+
+  per the matrix below.
+- `src/readme.js` reflects the chosen formatter in "Built With" + scripts.
+- Quick Setup defaults: linter `eslint`, formatter `prettier`, `gitInit: true`.
+
+> Note: the explicit `--quick-setup` / `-y` non-interactive flags described in
+>
+> the original plan are **not implemented**. The Quick Setup defaults are
+>
+> currently applied via the cached-config flow. See Future.
+
+### Dependency matrix
+
+
+| Linter | Formatter | `devDependencies` to Install         |
+| :------ | :--------- | :------------------------------------ |
+| ESLint | Prettier  | `prettier`, `eslint-config-prettier` |
+| Oxlint | Oxfmt     | `oxfmt`                              |
+| Oxlint | Prettier  | `prettier`                           |
+| None   | —         | None                                 |
+
+
+### Default configuration files
+
+#### Oxfmt (`.oxfmtrc.json`)
+
 ```json
 {
-  "\$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
   "printWidth": 80,
   "singleQuote": true,
   "semi": true,
@@ -61,7 +119,8 @@ The CLI will adapt its questions dynamically depending on the user's previous ch
 }
 ```
 
-#### Prettier Configuration (`.prettierrc`)
+#### Prettier (`.prettierrc`)
+
 ```json
 {
   "semi": true,
@@ -74,25 +133,17 @@ The CLI will adapt its questions dynamically depending on the user's previous ch
 
 ---
 
-### Files to Modify / Create
+## 🔮 Future / Ideas (unscheduled)
 
-| File | Change Type | Description |
-| :--- | :--- | :--- |
-| `src/prompts.js` | Modify | Dynamic formatter select + format configs + response mapping. |
-| `src/dependencies.js` | Modify | Installation logic for `prettier`, `eslint-config-prettier`, and `oxfmt`. |
-| `src/injector.js` | Modify | Create `injectFormatter()` function — copies config templates and appends scripts to `package.json`. |
-| `src/readme.js` | Modify | Update "Built With" section and append specific commands/scripts for each formatter. |
-| `templates/conditional/formatter/prettier/.prettierrc` | **New** | Base Prettier configuration template file. |
-| `templates/conditional/formatter/oxfmt/.oxfmtrc.json` | **New** | Base Oxfmt configuration template file. |
-| `package.json` | Modify | Update version bump from `1.1.0` ➡️ `1.2.0`. |
-| `bin/cli.js` | Modify | Update CLI banner/version from `v1.1.0` ➡️ `v1.2.0`. |
+Proposals only — **no work has started** on these:
 
----
+- `**.env.example` scaffolding** — copy a `.env.example` into generated projects.
+- **Non-interactive flags** — `--quick-setup` / `-y` to apply defaults without
 
-### ⚡ Quick Setup Defaults
+  prompting.
+- **True headless e2e** — drive `bin/cli.js` through the prompts (current
 
-When running the fast track command flags (e.g., `--quick-setup` or `-y`), the CLI applies these default configurations automatically without prompting the user:
+  harnesses call `src/` directly, so they are integration tests, not CLI e2e).
+- Expanded test coverage for additional option combinations.
+- Implement Path Aliases
 
-* **Linter:** `eslint`
-* **Formatter:** `prettier`
-* **Git Repository:** `true` (Git initialization enabled by default)

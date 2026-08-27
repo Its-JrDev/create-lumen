@@ -32,6 +32,7 @@ create-lumen my-app      # after npm link
 - Optional router (React Router)
 - Optional testing: Vitest or Jest
 - Linting: ESLint (default) or Oxlint
+- Code formatter: Prettier or Oxfmt (chosen after the linter; `eslint-config-prettier` is auto-wired for the ESLint + Prettier combo)
 - Optional Axios setup and icon libraries
 - Auto `git init`, generated `README` and `LICENSE`
 - `@/` path alias configured
@@ -57,6 +58,16 @@ Install globally for testing:
 ```bash
 npm link
 create-lumen my-app
+```
+
+## Testing the scaffolder
+
+The CLI repo has no app-level test suite, but `npm test` runs the unit tests under `tests/unit/` plus the offline smoke tests under `tests/smoke/`, and two harnesses in `tests/e2e/` and `tests/smoke/` drive the real generator against generated scaffolds. See `docs/tests/README.md` (and `harness.md`) for details, scope, and what they verify.
+
+```bash
+npm test                      # unit (tests/unit/) + offline smoke (tests/smoke/generate.test.mjs)
+node tests/smoke/install.mjs  # real-install smoke (Quick Setup default; runs npm create vite + installs; needs network)
+node tests/e2e/exhaustive.mjs # full option matrix (~11,664 combos, local-only; ~13 min). Use LIMIT=n for a subset.
 ```
 
 ## Project structure (generated app examples)
@@ -130,6 +141,10 @@ See `docs/ROADMAP.md` for planned features and upcoming releases.
 ## Requirements
 
 - Node.js >= 18
+
+## Acknowledgements
+
+This project is based on [create-vrtw](https://github.com/Avijit07x/create-vrtw) by [@Avijit07x](https://github.com/Avijit07x). Thank you for the original work that inspired this scaffolder.
 
 ## License
 
