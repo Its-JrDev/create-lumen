@@ -1,4 +1,4 @@
-import { writeFileRecursive } from "./utils/fs.js";
+import { writeFileRecursive } from "@/utils/fs.js";
 import path from "path";
 
 function buildBuiltWith(responses) {

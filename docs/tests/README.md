@@ -14,14 +14,18 @@ Tests live under `tests/` and are split into three tiers:
 ## Running
 
 ```bash
-npm test                        # unit (tests/unit/) + offline smoke (tests/smoke/generate.test.mjs)
-node tests/smoke/install.mjs    # real-install smoke (Quick Setup default; needs network)
-node tests/e2e/exhaustive.mjs   # full option matrix (~11,664 combos, offline); LIMIT=n for a subset
+npm test                                    # unit (tests/unit/) + offline smoke (tests/smoke/generate.test.mjs)
+node --import ./register.js tests/smoke/install.mjs   # real-install smoke (needs network)
+node --import ./register.js tests/e2e/exhaustive.mjs  # full option matrix (~11,664 combos, offline); LIMIT=n for subset
 ```
 
 `npm test` intentionally runs only the fast, offline `node:test` files
 (`*.test.mjs`). The two harness scripts (`install.mjs`, `exhaustive.mjs`)
 generate full scaffolds and are run manually.
+
+> The `--import ./register.js` flag loads the `@/` path-alias hook before the
+> harnesses (which `import src/` statically). `npm test` already includes it;
+> the manual harnesses need it passed on the command line.
 
 ## Tier details
 

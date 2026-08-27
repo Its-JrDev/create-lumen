@@ -3,17 +3,17 @@ import chalk from "chalk";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import { confirmEmptyFolder } from "./confirm-empty-folder.js";
-import { cleanupBoilerplate } from "./cleanup.js";
-import { configureProject } from "./configure.js";
-import { setupCssFramework } from "./css.js";
-import { injectArchitecture, injectConditionals, injectFormatter } from "./injector.js";
-import { getPkgManager } from "./utils/pkg-manager.js";
-import { handleDevServer } from "./utils/dev-server.js";
-import { getUserInputs, onCancel } from "./prompts.js";
-import { runBaseInstall, runGitInit, runViteCreate } from "./scaffold.js";
-import { installAllDeps } from "./dependencies.js";
-import { generateReadme } from "./readme.js";
+import { confirmEmptyFolder } from "@/confirm-empty-folder.js";
+import { cleanupBoilerplate } from "@/cleanup.js";
+import { configureProject } from "@/configure.js";
+import { setupCssFramework } from "@/css.js";
+import { injectArchitecture, injectConditionals, injectFormatter } from "@/injector.js";
+import { getPkgManager } from "@/utils/pkg-manager.js";
+import { handleDevServer } from "@/utils/dev-server.js";
+import { getUserInputs, onCancel } from "@/prompts.js";
+import { runBaseInstall, runGitInit, runViteCreate } from "@/scaffold.js";
+import { installAllDeps } from "@/dependencies.js";
+import { generateReadme } from "@/readme.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

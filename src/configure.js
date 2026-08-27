@@ -1,20 +1,21 @@
 import { promises as fsp } from "fs";
 import path from "path";
-import { readFileContent } from "./utils/fs.js";
+import { readFileContent } from "@/utils/fs.js";
+import { getPathAliases, getViteAliases } from "@/aliases.js";
 
 export async function configureProject(projectPath, language, cssFramework) {
   const ext = language === "ts" ? "ts" : "js";
 
-  // Set up tsconfig/jsconfig with @/* paths
+  // Set up tsconfig/jsconfig with the @/* path alias
   if (language === "ts") {
     await configureTsconfig(projectPath);
   } else {
     await configureJsconfig(projectPath);
   }
 
-  // Add tsconfigPaths: true to vite.config for non-tailwind setups
+  // Add path aliases to vite.config for non-tailwind setups
   if (cssFramework !== "tailwind") {
-    await addTsconfigPathsToViteConfig(projectPath, ext);
+    await addPathAliasesToViteConfig(projectPath, ext);
   }
 
   // Add scripts to package.json
@@ -22,6 +23,7 @@ export async function configureProject(projectPath, language, cssFramework) {
 }
 
 async function configureTsconfig(projectPath) {
+  const paths = getPathAliases();
   // Create/update tsconfig.app.json with paths
   const tsconfigAppPath = path.join(projectPath, "tsconfig.app.json");
   try {
@@ -30,9 +32,7 @@ async function configureTsconfig(projectPath) {
 
     if (!config.compilerOptions) config.compilerOptions = {};
     config.compilerOptions.baseUrl = ".";
-    config.compilerOptions.paths = {
-      "@/*": ["./src/*"],
-    };
+    config.compilerOptions.paths = paths;
 
     await fsp.writeFile(
       tsconfigAppPath,
@@ -59,9 +59,7 @@ async function configureTsconfig(projectPath) {
         noUnusedParameters: true,
         noFallthroughCasesInSwitch: true,
         baseUrl: ".",
-        paths: {
-          "@/*": ["./src/*"],
-        },
+        paths,
       },
       include: ["src"],
     };
@@ -90,16 +88,14 @@ async function configureJsconfig(projectPath) {
   const config = {
     compilerOptions: {
       baseUrl: ".",
-      paths: {
-        "@/*": ["./src/*"],
-      },
+      paths: getPathAliases(),
     },
     include: ["src"],
   };
   await fsp.writeFile(jsconfigPath, JSON.stringify(config, null, 2) + "\n", "utf8");
 }
 
-async function addTsconfigPathsToViteConfig(projectPath, ext) {
+async function addPathAliasesToViteConfig(projectPath, ext) {
   const viteConfigPath = path.join(projectPath, `vite.config.${ext}`);
   try {
     let content = await readFileContent(viteConfigPath);
@@ -124,15 +120,21 @@ async function addTsconfigPathsToViteConfig(projectPath, ext) {
 
     let result = lines.join("\n");
 
+    const aliasArray = getViteAliases()
+      .map(
+        (a) =>
+          `{ find: "${a.find}", replacement: ${a.replacement} }`
+      )
+      .join(",\n              ");
+
+    const resolveBlock = `resolve: {\n    tsconfigPaths: true,\n    alias: [\n              ${aliasArray}\n    ],\n  }`;
+
     if (result.includes("resolve:")) {
-      result = result.replace(
-        /resolve:\s*\{/,
-        'resolve: {\n    tsconfigPaths: true,\n    alias: [{ find: "@", replacement: path.resolve(__dirname, "src") }],'
-      );
+      result = result.replace(/resolve:\s*\{/, resolveBlock);
     } else {
       result = result.replace(
         /defineConfig\(\{/,
-        'defineConfig({\n  resolve: {\n    tsconfigPaths: true,\n    alias: [{ find: "@", replacement: path.resolve(__dirname, "src") }],\n  },'
+        `defineConfig({\n  ${resolveBlock},`
       );
     }
 

@@ -1,6 +1,6 @@
 import path from "path";
 import { execa } from "execa";
-import { isYarnV1 } from "./utils/yarn-v1.js";
+import { isYarnV1 } from "@/utils/yarn-v1.js";
 
 export async function runViteCreate(projectPath, projectName, pkg, language) {
   const useYarn = pkg === "yarn";

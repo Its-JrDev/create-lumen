@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { main } from "../src/main.js";
 import chalk from "chalk";
+import "../register.js";
 
 console.log(
   chalk.bold.cyan("\n  ✦ LUMEN") +
@@ -10,6 +10,8 @@ console.log(
       "\n  Scaffold a React + Vite project with architecture choice\n"
     )
 );
+
+const { main } = await import("@/main.js");
 
 main().catch((e) => {
   console.error(chalk.red("\nError:"), e.message || e);

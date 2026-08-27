@@ -65,9 +65,9 @@ create-lumen my-app
 The CLI repo has no app-level test suite, but `npm test` runs the unit tests under `tests/unit/` plus the offline smoke tests under `tests/smoke/`, and two harnesses in `tests/e2e/` and `tests/smoke/` drive the real generator against generated scaffolds. See `docs/tests/README.md` (and `harness.md`) for details, scope, and what they verify.
 
 ```bash
-npm test                      # unit (tests/unit/) + offline smoke (tests/smoke/generate.test.mjs)
-node tests/smoke/install.mjs  # real-install smoke (Quick Setup default; runs npm create vite + installs; needs network)
-node tests/e2e/exhaustive.mjs # full option matrix (~11,664 combos, local-only; ~13 min). Use LIMIT=n for a subset.
+npm test                                    # unit (tests/unit/) + offline smoke (tests/smoke/generate.test.mjs)
+node --import ./register.js tests/smoke/install.mjs  # real-install smoke (Quick Setup default; needs network)
+node --import ./register.js tests/e2e/exhaustive.mjs # full option matrix (~11,664 combos, local-only; ~13 min). Use LIMIT=n.
 ```
 
 ## Project structure (generated app examples)

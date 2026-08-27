@@ -1,7 +1,7 @@
 import fs from "fs";
 import { promises as fsp } from "fs";
 import path from "path";
-import { deleteIfExists } from "./utils/fs.js";
+import { deleteIfExists } from "@/utils/fs.js";
 
 export async function setupCssFramework({
   projectPath,

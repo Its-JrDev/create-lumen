@@ -1,7 +1,7 @@
 import { isCancel, select } from "@clack/prompts";
 import { access, mkdir, readdir, rm } from "fs/promises";
 import path from "path";
-import { onCancel } from "./prompts.js";
+import { onCancel } from "@/prompts.js";
 
 export async function confirmEmptyFolder(projectName) {
   const cwd = process.cwd();

@@ -1,6 +1,6 @@
 import { cancel, confirm, isCancel, note, select, text } from "@clack/prompts";
 import chalk from "chalk";
-import { configExists, loadConfig, saveConfig } from "./config-cache.js";
+import { configExists, loadConfig, saveConfig } from "@/config-cache.js";
 
 export function onCancel() {
   console.log(chalk.gray("\n\nOperation cancelled.\n"));

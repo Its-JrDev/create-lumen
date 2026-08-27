@@ -1,4 +1,4 @@
-import { deleteIfExists } from "./utils/fs.js";
+import { deleteIfExists } from "@/utils/fs.js";
 
 export async function cleanupBoilerplate(projectPath) {
   await deleteIfExists(`${projectPath}/public`);

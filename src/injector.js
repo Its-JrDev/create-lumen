@@ -1,6 +1,6 @@
 import { promises as fsp } from "fs";
 import path from "path";
-import { copyDirRecursive, writeFileRecursive } from "./utils/fs.js";
+import { copyDirRecursive, writeFileRecursive } from "@/utils/fs.js";
 
 export async function injectArchitecture(projectPath, templatesDir, architecture, language) {
   const ext = language === "ts" ? "tsx" : "jsx";
