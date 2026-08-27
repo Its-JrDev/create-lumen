@@ -130,3 +130,13 @@ test("quick setup falls back to the current folder name when no project name arg
   assert.equal(resolveProjectName({ quickSetup: true, projectName: "custom-app", cwd: "/tmp/my-appus" }), "custom-app");
   assert.equal(resolveProjectName({ quickSetup: false, cwd: "/tmp/my-appus" }), null);
 });
+
+test("resolveProjectName ignores the quick-setup flag when it appears before the project name", () => {
+  const originalArgv = process.argv;
+  try {
+    process.argv = ["node", "cli.js", "-y", "my-appu"];
+    assert.equal(resolveProjectName({ quickSetup: true, cwd: "/tmp/my-appus" }), "my-appu");
+  } finally {
+    process.argv = originalArgv;
+  }
+});

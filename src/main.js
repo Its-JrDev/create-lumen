@@ -22,7 +22,9 @@ const TEMPLATES_DIR = path.join(__dirname, "../templates");
 const CURRENT_DIR = process.cwd();
 
 export function resolveProjectName({ quickSetup = false, projectName: nameArg, cwd = CURRENT_DIR } = {}) {
-  const cliArg = nameArg || process.argv[2];
+  const cliArgs = (process.argv.slice(2) ?? []).filter((arg) => arg && !arg.startsWith("-"));
+  const cliArg = nameArg || cliArgs[0] || null;
+
   if (cliArg && cliArg.trim()) {
     return cliArg.trim();
   }

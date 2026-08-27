@@ -18,7 +18,11 @@ Non-interactive Quick Setup (TypeScript + Tailwind + Feature-based + Router + ES
 
 ```bash
 npm create lumen my-app -y
+# or
+npm create lumen -y my-app
 ```
+
+The CLI ignores flag arguments when resolving the project name, so `-y` can appear before or after the app name without being mistaken for the folder name.
 
 Run the scaffolder locally (development / testing the generator):
 
