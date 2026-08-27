@@ -21,11 +21,12 @@ const __dirname = path.dirname(__filename);
 const TEMPLATES_DIR = path.join(__dirname, "../templates");
 const CURRENT_DIR = process.cwd();
 
-export async function main() {
+export async function main(options = {}) {
+  const { quickSetup = false, projectName: nameArg } = options;
   const pkg = getPkgManager();
 
   // 1. Project name
-  const cliArg = process.argv[2];
+  const cliArg = nameArg || process.argv[2];
   let projectName;
 
   if (cliArg && cliArg.trim()) {
@@ -46,7 +47,7 @@ export async function main() {
   await confirmEmptyFolder(projectName);
 
   // 3. Collect user preferences
-  const responses = await getUserInputs(projectName);
+  const responses = await getUserInputs(projectName, { quickSetup });
 
   const projectPath = path.resolve(CURRENT_DIR, projectName);
 

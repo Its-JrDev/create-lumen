@@ -14,6 +14,12 @@ cd my-app
 npm run dev
 ```
 
+Non-interactive Quick Setup (TypeScript + Tailwind + Feature-based + Router + ESLint + Prettier + Vitest), no prompts:
+
+```bash
+npm create lumen my-app -y
+```
+
 Run the scaffolder locally (development / testing the generator):
 
 ```bash

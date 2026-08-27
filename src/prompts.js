@@ -48,9 +48,30 @@ function formatConfig(responses) {
   ].join("\n");
 }
 
-export async function getUserInputs(projectName) {
+export async function getUserInputs(projectName, { quickSetup = false } = {}) {
   let oldConfig = {};
   let useOldConfig = false;
+
+  // Non-interactive quick setup: apply defaults without prompting.
+  if (quickSetup) {
+    const responses = {
+      projectName,
+      architecture: "feature-based",
+      language: "ts",
+      cssFramework: "tailwind",
+      testing: "vitest",
+      router: true,
+      stateManagement: "none",
+      iconLibrary: "none",
+      apiClient: "none",
+      linter: "eslint",
+      formatter: "prettier",
+      gitInit: true,
+      readme: true,
+    };
+    await saveConfig(responses);
+    return responses;
+  }
 
   if (await configExists()) {
     oldConfig = await loadConfig();
@@ -85,14 +106,14 @@ export async function getUserInputs(projectName) {
   }
 
   // Quick Setup
-  const quickSetup = await confirm({
+  const quickSetupChoice = await confirm({
     message:
       "Quick Setup? (TypeScript + Tailwind + Feature-based + Router + ESLint + Vitest)",
     initialValue: true,
   });
-  if (isCancel(quickSetup)) onCancel();
+  if (isCancel(quickSetupChoice)) onCancel();
 
-  if (quickSetup) {
+  if (quickSetupChoice) {
     const responses = {
       projectName,
       architecture: "feature-based",

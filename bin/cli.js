@@ -3,6 +3,10 @@
 import chalk from "chalk";
 import "../register.js";
 
+const args = process.argv.slice(2);
+const quickSetup = args.includes("-y");
+const projectName = args.find((a) => !a.startsWith("-"));
+
 console.log(
   chalk.bold.cyan("\n  ✦ LUMEN") +
     chalk.gray(" v1.1.0") +
@@ -13,7 +17,7 @@ console.log(
 
 const { main } = await import("@/main.js");
 
-main().catch((e) => {
+main({ quickSetup, projectName }).catch((e) => {
   console.error(chalk.red("\nError:"), e.message || e);
   process.exit(1);
 });
