@@ -3,3 +3,4 @@ node_modules/
 *.log
 
 AGENTS.md
+tests/.cache/
