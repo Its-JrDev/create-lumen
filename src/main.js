@@ -7,7 +7,7 @@ import { confirmEmptyFolder } from "./confirm-empty-folder.js";
 import { cleanupBoilerplate } from "./cleanup.js";
 import { configureProject } from "./configure.js";
 import { setupCssFramework } from "./css.js";
-import { injectArchitecture, injectConditionals } from "./injector.js";
+import { injectArchitecture, injectConditionals, injectFormatter } from "./injector.js";
 import { getPkgManager } from "./utils/pkg-manager.js";
 import { handleDevServer } from "./utils/dev-server.js";
 import { getUserInputs, onCancel } from "./prompts.js";
@@ -116,6 +116,17 @@ export async function main() {
     condSpin.stop(chalk.green("Features configured."));
   } catch (err) {
     condSpin.stop(chalk.red("Failed to configure features."));
+    throw err;
+  }
+
+  // 8.5 Inject formatter (config file + scripts + eslint-config-prettier wiring)
+  const fmtSpin = spinner();
+  fmtSpin.start("Configuring code formatter...");
+  try {
+    await injectFormatter(projectPath, TEMPLATES_DIR, responses);
+    fmtSpin.stop(chalk.green("Formatter configured."));
+  } catch (err) {
+    fmtSpin.stop(chalk.red("Failed to configure formatter."));
     throw err;
   }
 

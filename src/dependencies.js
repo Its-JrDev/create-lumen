@@ -89,6 +89,16 @@ export async function installAllDeps(responses, pkg, cwd) {
     devDeps.push("oxlint");
   }
 
+  // Formatter
+  if (responses.formatter === "prettier") {
+    devDeps.push("prettier");
+    if (responses.linter === "eslint") {
+      devDeps.push("eslint-config-prettier");
+    }
+  } else if (responses.formatter === "oxfmt") {
+    devDeps.push("oxfmt");
+  }
+
   // Always re-install react + react-dom for consistency
   deps.push("react", "react-dom");
 

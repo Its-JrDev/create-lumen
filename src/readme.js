@@ -48,6 +48,12 @@ function buildBuiltWith(responses) {
     items.push("[Oxlint](https://oxc.rs/)");
   }
 
+  if (responses.formatter === "prettier") {
+    items.push("[Prettier](https://prettier.io/)");
+  } else if (responses.formatter === "oxfmt") {
+    items.push("[Oxfmt](https://oxc.rs/)");
+  }
+
   return items.map((item) => `- ${item}`).join("\n");
 }
 
@@ -67,6 +73,10 @@ function buildScripts(responses) {
     rows.push("| `npm run lint:fix` | Run ESLint with auto-fix |");
   } else if (responses.linter === "oxlint") {
     rows.push("| `npm run lint` | Run Oxlint |");
+  }
+
+  if (responses.formatter === "prettier" || responses.formatter === "oxfmt") {
+    rows.push("| `npm run format` | Format code |");
   }
 
   return rows.join("\n");

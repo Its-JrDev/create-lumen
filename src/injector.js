@@ -43,6 +43,89 @@ export async function injectArchitecture(projectPath, templatesDir, architecture
   try { await fsp.rm(oppositeMain, { force: true }); } catch {}
 }
 
+export async function injectFormatter(projectPath, templatesDir, responses) {
+  if (!responses.formatter || responses.formatter === "none") return;
+
+  // Copy the formatter config file to the project root
+  const configFile =
+    responses.formatter === "prettier" ? ".prettierrc" : ".oxfmtrc.json";
+  const configSrc = path.join(
+    templatesDir,
+    "conditional",
+    "formatter",
+    responses.formatter,
+    configFile
+  );
+  try {
+    await fsp.access(configSrc);
+    await fsp.copyFile(configSrc, path.join(projectPath, configFile));
+  } catch {}
+
+  // Append format script(s) to package.json
+  const pkgPath = path.join(projectPath, "package.json");
+  try {
+    const content = await fsp.readFile(pkgPath, "utf8");
+    const pkg = JSON.parse(content);
+    if (!pkg.scripts) pkg.scripts = {};
+    if (responses.formatter === "prettier") {
+      pkg.scripts.format = "prettier --write .";
+      pkg.scripts["format:check"] = "prettier --check .";
+    } else if (responses.formatter === "oxfmt") {
+      pkg.scripts.format = "oxfmt .";
+    }
+    await fsp.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
+  } catch {}
+
+  // Wire eslint-config-prettier only for the eslint + prettier combination
+  if (responses.linter === "eslint" && responses.formatter === "prettier") {
+    await wireEslintPrettier(projectPath, responses.language);
+  }
+}
+
+async function wireEslintPrettier(projectPath, language) {
+  const ext = language === "ts" ? "ts" : "js";
+  const eslintConfigPath = path.join(projectPath, `eslint.config.${ext}`);
+  try {
+    let content = await fsp.readFile(eslintConfigPath, "utf8");
+
+    // Avoid double-injection on re-runs
+    if (content.includes("eslint-config-prettier")) return;
+
+    // Add the import after the last import line
+    const lines = content.split("\n");
+    let lastImportIdx = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].startsWith("import ")) lastImportIdx = i;
+    }
+    lines.splice(
+      lastImportIdx + 1,
+      0,
+      'import prettier from "eslint-config-prettier";'
+    );
+
+    let result = lines.join("\n");
+
+    // Append ...prettier as the LAST element of the eslint config.
+    // The JS template exports an array (`export default [...]`); the TS
+    // template uses a function call (`export default tseslint.config(...)`).
+    const pushLast = (_, head, tail) =>
+      head.replace(/,\s*$/, "") + ",\n  ...prettier," + tail;
+    if (result.includes("tseslint.config(")) {
+      result = result.replace(
+        /(export default tseslint\.config\([\s\S]*?)(\n\s*\);)/,
+        pushLast
+      );
+    } else {
+      result = result.replace(
+        /(export default \[[\s\S]*?)(\n\s*\];)/,
+        pushLast
+      );
+    }
+
+    await fsp.writeFile(eslintConfigPath, result, "utf8");
+  } catch {}
+}
+
 export async function injectConditionals(projectPath, templatesDir, responses, architecture, language) {
   const ext = language === "ts" ? "tsx" : "jsx";
 

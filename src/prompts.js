@@ -42,6 +42,7 @@ function formatConfig(responses) {
     `• ${chalk.bold("Icons:")} ${chalk.blue(responses.iconLibrary === "none" ? "None" : responses.iconLibrary === "lucide" ? "Lucide" : "Huge")}`,
     `• ${chalk.bold("API Client:")} ${responses.apiClient === "axios" ? chalk.green("Axios") : responses.apiClient === "fetch" ? chalk.yellow("Fetch") : chalk.red("None")}`,
     `• ${chalk.bold("Linter:")} ${responses.linter === "oxlint" ? chalk.green("Oxlint") : responses.linter === "eslint" ? chalk.yellow("ESLint") : chalk.red("None")}`,
+    `• ${chalk.bold("Formatter:")} ${responses.formatter === "oxfmt" ? chalk.green("Oxfmt") : responses.formatter === "prettier" ? chalk.yellow("Prettier") : chalk.red("None")}`,
     `• ${chalk.bold("Git:")} ${responses.gitInit ? chalk.green("Yes") : chalk.red("No")}`,
     `• ${chalk.bold("README:")} ${responses.readme ? chalk.green("Yes") : chalk.red("No")}`,
   ].join("\n");
@@ -76,6 +77,9 @@ export async function getUserInputs(projectName) {
       if (oldConfig.apiClient === undefined) {
         oldConfig.apiClient = oldConfig.axios ? "axios" : "none";
       }
+      if (oldConfig.formatter === undefined) {
+        oldConfig.formatter = "none";
+      }
       return { ...oldConfig, projectName };
     }
   }
@@ -100,7 +104,8 @@ export async function getUserInputs(projectName) {
       iconLibrary: "none",
       apiClient: "none",
       linter: "eslint",
-      gitInit: false,
+      formatter: "prettier",
+      gitInit: true,
       readme: true,
     };
     await saveConfig(responses);
@@ -214,6 +219,27 @@ export async function getUserInputs(projectName) {
   });
   if (isCancel(linter)) onCancel();
 
+  let formatter = "none";
+  if (linter !== "none") {
+    const formatterOptions =
+      linter === "eslint"
+        ? [
+            { label: "None", value: "none" },
+            { label: "Prettier", value: "prettier" },
+          ]
+        : [
+            { label: "None", value: "none" },
+            { label: "Oxfmt (Recommended)", value: "oxfmt" },
+            { label: "Prettier", value: "prettier" },
+          ];
+    formatter = await select({
+      message: "Which formatter do you want to use?",
+      options: formatterOptions,
+      initialValue: linter === "eslint" ? "prettier" : "oxfmt",
+    });
+    if (isCancel(formatter)) onCancel();
+  }
+
   const readme = await confirm({
     message: "Would you like to generate a README.md and LICENSE?",
     initialValue: true,
@@ -231,6 +257,7 @@ export async function getUserInputs(projectName) {
     iconLibrary,
     apiClient,
     linter,
+    formatter,
     gitInit,
     readme,
   };
