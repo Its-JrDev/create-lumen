@@ -239,6 +239,16 @@ async function injectTesting(projectPath, templatesDir, framework, language, arc
     await writeFileRecursive(setupDest, await fsp.readFile(setupSrc, "utf8"));
   } catch {}
 
+  // Jest keeps its setup at the template root (jest.setup.ts/js), referenced by
+  // jest.config as <rootDir>/jest.setup.ts — copy it to the project root.
+  if (framework === "jest") {
+    const jestSetupSrc = path.join(testingDir, `jest.setup.${configExt}`);
+    try {
+      await fsp.access(jestSetupSrc);
+      await fsp.copyFile(jestSetupSrc, path.join(projectPath, `jest.setup.${configExt}`));
+    } catch {}
+  }
+
   // Copy test file
   const testExt = language === "ts" ? "tsx" : "jsx";
   const testSrc = path.join(testingDir, `src/__tests__/App.test.${testExt}`);
