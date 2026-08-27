@@ -17,9 +17,9 @@ npm run dev
 Non-interactive Quick Setup (TypeScript + Tailwind + Feature-based + Router + ESLint + Prettier + Vitest), no prompts:
 
 ```bash
-npm create lumen my-app -y
+npm create lumen my-app -- -y
 # or
-npm create lumen -y my-app
+npm create lumen -- -y my-app
 ```
 
 The CLI ignores flag arguments when resolving the project name, so `-y` can appear before or after the app name without being mistaken for the folder name.
