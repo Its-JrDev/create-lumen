@@ -1,6 +1,6 @@
 {
   "name": "create-lumen",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "description": "Scaffold a React + Vite project with architecture choice: feature-based or component-based.",
   "type": "module",
   "bin": {
