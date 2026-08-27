@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 
 import { runViteCreate } from "../../src/scaffold.js";
 import { injectArchitecture, injectConditionals, injectFormatter } from "../../src/injector.js";
+import { copyEnvExample } from "../../src/env.js";
 import { setupCssFramework } from "../../src/css.js";
 import { configureProject } from "../../src/configure.js";
 import { cleanupBoilerplate } from "../../src/cleanup.js";
@@ -58,6 +59,7 @@ async function generate(responses, baseApp, projectPath) {
   });
   await configureProject(projectPath, responses.language, responses.cssFramework);
   await cleanupBoilerplate(projectPath);
+  await copyEnvExample(projectPath, TEMPLATES_DIR);
   if (responses.readme) await generateReadme(projectPath, "app", responses);
   process.chdir(REPO);
   return projectPath;
@@ -121,6 +123,10 @@ async function check(responses, projectPath) {
   assert.ok(/\.\.\.prettier,\s*\n\s*[)\]];/.test(cfg), "...prettier not last in eslint config");
 
   assert.ok(await exists(path.join(projectPath, ".prettierrc")), ".prettierrc missing");
+  assert.ok(await exists(path.join(projectPath, ".env.example")), ".env.example missing");
+  const gitignore = await fsp.readFile(path.join(projectPath, ".gitignore"), "utf8");
+  assert.ok(gitignore.includes("!.env.example"), ".gitignore: .env.example not whitelisted");
+  assert.ok(gitignore.includes(".env"), ".gitignore: env files not ignored");
   assert.ok(await exists(path.join(projectPath, "README.md")), "README.md missing");
   assert.ok(await exists(path.join(projectPath, "LICENSE")), "LICENSE missing");
 }

@@ -4,6 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { confirmEmptyFolder } from "@/confirm-empty-folder.js";
+import { copyEnvExample } from "@/env.js";
 import { cleanupBoilerplate } from "@/cleanup.js";
 import { configureProject } from "@/configure.js";
 import { setupCssFramework } from "@/css.js";
@@ -182,6 +183,9 @@ export async function main() {
 
   // 12. Cleanup boilerplate
   await cleanupBoilerplate(projectPath);
+
+  // 12.5 Copy .env.example into the project
+  await copyEnvExample(projectPath, TEMPLATES_DIR);
 
   // 13. Generate README.md + LICENSE (if requested)
   if (responses.readme) {

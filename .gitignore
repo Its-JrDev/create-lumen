@@ -2,5 +2,10 @@ node_modules/
 .DS_Store
 *.log
 
+# Environment variables
+.env
+.env.*
+!.env.example
+
 AGENTS.md
 tests/.cache/
