@@ -212,6 +212,12 @@ async function check(responses, projectPath) {
     assert.ok(js.includes('"@/*"'), "js: @/* path missing");
   }
 
+  // vite config gets the @ alias for non-tailwind setups
+  if (cssFramework !== "tailwind") {
+    const vite = await fsp.readFile(path.join(projectPath, `vite.config.${extConfig}`), "utf8");
+    assert.ok(vite.includes('find: "@"'), "vite: @ alias missing");
+  }
+
   // README
   if (responses.readme) {
     assert.ok(await exists(path.join(projectPath, "README.md")), "readme: README.md missing");

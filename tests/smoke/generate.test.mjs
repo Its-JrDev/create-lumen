@@ -128,6 +128,8 @@ async function check(responses, projectPath) {
   assert.ok(gitignore.includes("!.env.example"), ".gitignore: .env.example not whitelisted");
   assert.ok(gitignore.includes(".env"), ".gitignore: env files not ignored");
   assert.ok(await exists(path.join(projectPath, "README.md")), "README.md missing");
+  const readme = await fsp.readFile(path.join(projectPath, "README.md"), "utf8");
+  assert.ok(readme.includes("ESLint + Prettier"), "README: description missing 'ESLint + Prettier'");
   assert.ok(await exists(path.join(projectPath, "LICENSE")), "LICENSE missing");
 }
 

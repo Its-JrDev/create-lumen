@@ -40,8 +40,9 @@ create-lumen my-app      # after npm link
 - Linting: ESLint (default) or Oxlint
 - Code formatter: Prettier or Oxfmt (chosen after the linter; `eslint-config-prettier` is auto-wired for the ESLint + Prettier combo)
 - Optional Axios setup and icon libraries
-- Auto `git init`, generated `README` and `LICENSE`
-- `@/` path alias configured
+- Auto `git init`, generated `README` (with a project description reflecting the chosen tooling) and `LICENSE`
+- `.env.example` scaffolded, and the generated `.gitignore` excludes env files (`.env`, `.env.*`) while keeping `.env.example`
+- `@/` path alias configured (`tsconfig`/`jsconfig` + Vite)
 
 Your selected options are cached and offered as defaults on subsequent runs.
 

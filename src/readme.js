@@ -135,14 +135,26 @@ SOFTWARE.
 `;
 }
 
+function buildDescription(projectName, responses) {
+  const tools = [];
+  if (responses.linter === "eslint") tools.push("ESLint");
+  else if (responses.linter === "oxlint") tools.push("Oxlint");
+  if (responses.formatter === "prettier") tools.push("Prettier");
+  else if (responses.formatter === "oxfmt") tools.push("Oxfmt");
+
+  let suffix = "";
+  if (tools.length > 0) {
+    suffix = `\n\nThis project is set up with ${tools.join(" + ")} for code quality.`;
+  }
+  return `# ${projectName}\n\nA React + Vite application built with ${responses.architecture}.${suffix}`;
+}
+
 function buildReadme(projectName, responses) {
   const builtWith = buildBuiltWith(responses);
   const scripts = buildScripts(responses);
   const structure = buildProjectStructure(responses.architecture);
 
-  return `# ${projectName}
-
-<!-- TODO: Add a short description of your project -->
+  return `${buildDescription(projectName, responses)}
 
 ## Built With
 

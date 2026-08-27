@@ -52,7 +52,7 @@ interactive prompt flow.
 
 ---
 
-## 📦 Version 1.1.0 (In Revision) — Prettier &amp; Oxfmt integration
+## 📦 Version 1.1.0 (Released) — Prettier &amp; Oxfmt integration
 
 Dynamic code formatter support based on the chosen linter. This improves
 
@@ -85,14 +85,22 @@ consistency and developer experience by scaffolding the formatter config and
 - `src/dependencies.js` installs `prettier`, `eslint-config-prettier`, or `oxfmt`
 
   per the matrix below.
-- `src/readme.js` reflects the chosen formatter in "Built With" + scripts.
+- `src/readme.js` generates the `README.md` with a real project description
+  (reflecting the architecture and the chosen tooling — e.g. "This project is
+  set up with ESLint + Prettier for code quality.") plus "Built With" + scripts.
+- `.env.example` scaffolding — a `.env.example` is copied into every generated
+  project (`src/env.js::copyEnvExample`), and the generated `.gitignore` is
+  updated to ignore env files (`.env`, `.env.*`) while whitelisting
+  `.env.example`.
+- **Non-interactive flags** — `bin/cli.js` accepts `-y` to apply the Quick
+  Setup defaults without prompting. `main()` receives `{ quickSetup,
+  projectName }`; `getUserInputs(projectName, { quickSetup })` returns the
+  defaults directly, skipping the prompt and config-cache reuse flow.
+- **Path aliases** — the generated `tsconfig`/`jsconfig` and Vite config get
+  the `@/*` → `src/*` alias (via `src/aliases.js`). The scaffolder itself also
+  gains a root `jsconfig.json` mapping `@/*` to `src/*` for its own internal
+  imports.
 - Quick Setup defaults: linter `eslint`, formatter `prettier`, `gitInit: true`.
-
-> Note: the explicit `--quick-setup` / `-y` non-interactive flags described in
->
-> the original plan are **not implemented**. The Quick Setup defaults are
->
-> currently applied via the cached-config flow. See Future.
 
 ### Dependency matrix
 
@@ -137,13 +145,8 @@ consistency and developer experience by scaffolding the formatter config and
 
 Proposals only — **no work has started** on these:
 
-- `**.env.example` scaffolding** — copy a `.env.example` into generated projects.
-- **Non-interactive flags** — `--quick-setup` / `-y` to apply defaults without
-
-  prompting.
 - **True headless e2e** — drive `bin/cli.js` through the prompts (current
 
   harnesses call `src/` directly, so they are integration tests, not CLI e2e).
 - Expanded test coverage for additional option combinations.
-- Implement Path Aliases
 
