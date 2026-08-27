@@ -5,6 +5,7 @@ import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
 import { injectFormatter } from "../../src/injector.js";
+import { resolveProjectName } from "../../src/main.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATES_DIR = path.resolve(__dirname, "../../templates");
@@ -122,4 +123,10 @@ test("eslint + prettier is idempotent (re-run adds exactly one import and one ..
   const cfg = await read(dir, "eslint.config.js");
   assert.equal((cfg.match(/eslint-config-prettier/g) || []).length, 1);
   assert.equal((cfg.match(/\.\.\.prettier/g) || []).length, 1);
+});
+
+test("quick setup falls back to the current folder name when no project name argument is passed", () => {
+  assert.equal(resolveProjectName({ quickSetup: true, cwd: "/tmp/my-appus" }), "my-appus");
+  assert.equal(resolveProjectName({ quickSetup: true, projectName: "custom-app", cwd: "/tmp/my-appus" }), "custom-app");
+  assert.equal(resolveProjectName({ quickSetup: false, cwd: "/tmp/my-appus" }), null);
 });
