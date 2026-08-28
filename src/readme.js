@@ -77,6 +77,7 @@ function buildScripts(responses) {
 
   if (responses.formatter === "prettier" || responses.formatter === "oxfmt") {
     rows.push("| `npm run format` | Format code |");
+    rows.push("| `npm run format:check` | Verify code is formatted |");
   }
 
   return rows.join("\n");

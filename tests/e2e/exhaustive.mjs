@@ -6,6 +6,7 @@ import { configureProject } from "../../src/configure.js";
 import { cleanupBoilerplate } from "../../src/cleanup.js";
 import { generateReadme } from "../../src/readme.js";
 import { getPkgManager } from "../../src/utils/pkg-manager.js";
+import { axes, matrix } from "./matrix.mjs";
 import { promises as fsp } from "fs";
 import path from "path";
 import os from "os";
@@ -18,43 +19,6 @@ const REPO = path.resolve(__dirname, "..", "..");
 const TEMPLATES_DIR = path.join(REPO, "templates");
 const CACHE = path.join(__dirname, "..", ".cache");
 const pkg = getPkgManager();
-
-// ---- Choice dimensions -------------------------------------------------
-const axes = {
-  architecture: ["feature-based", "component-based"],
-  language: ["ts", "js"],
-  cssFramework: ["tailwind", "bootstrap", "none"],
-  testing: ["vitest", "jest", "none"],
-  router: [true, false],
-  stateManagement: ["none", "redux", "zustand"],
-  iconLibrary: ["none", "lucide", "huge"],
-  apiClient: ["none", "axios", "fetch"],
-  linter: ["none", "eslint", "oxlint"],
-};
-const formatterFor = (linter) =>
-  linter === "none"
-    ? ["none"]
-    : linter === "eslint"
-    ? ["none", "prettier"]
-    : ["none", "oxfmt", "prettier"];
-
-// Cartesian product over the 9 axes, then expand formatter per linter.
-function* matrix() {
-  const keys = Object.keys(axes);
-  function* rec(i, acc) {
-    if (i === keys.length) {
-      for (const formatter of formatterFor(acc.linter)) {
-        yield { ...acc, formatter };
-      }
-      return;
-    }
-    const k = keys[i];
-    for (const v of axes[k]) {
-      yield* rec(i + 1, { ...acc, [k]: v });
-    }
-  }
-  yield* rec(0, {});
-}
 
 async function exists(p) {
   try {
@@ -189,7 +153,7 @@ async function check(responses, projectPath) {
     if (linter === "eslint") {
       const cfg = await fsp.readFile(path.join(projectPath, `eslint.config.${extConfig}`), "utf8");
       assert.ok(cfg.includes('import prettier from "eslint-config-prettier";'), "eslint+prettier: import missing");
-      assert.ok(/\.\.\.prettier,\s*\n\s*[)\]];/.test(cfg), "eslint+prettier: ...prettier not last");
+      assert.ok(/prettier,\s*\n\s*[)\]];/.test(cfg), "eslint+prettier: prettier not last");
     }
   } else if (formatter === "oxfmt") {
     assert.ok(await exists(path.join(projectPath, ".oxfmtrc.json")), ".oxfmtrc.json missing");
@@ -215,7 +179,7 @@ async function check(responses, projectPath) {
   // vite config gets the @ alias for non-tailwind setups
   if (cssFramework !== "tailwind") {
     const vite = await fsp.readFile(path.join(projectPath, `vite.config.${extConfig}`), "utf8");
-    assert.ok(vite.includes('find: "@"'), "vite: @ alias missing");
+    assert.ok(/(?:["'])@(?:["'])/.test(vite) || vite.includes("find: @"), "vite: @ alias missing");
   }
 
   // README

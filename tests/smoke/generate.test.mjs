@@ -120,7 +120,7 @@ async function check(responses, projectPath) {
   assert.ok(await exists(eslintCfg), `eslint.config.${extConfig} missing`);
   const cfg = await fsp.readFile(eslintCfg, "utf8");
   assert.ok(cfg.includes('import prettier from "eslint-config-prettier";'), "...prettier import missing");
-  assert.ok(/\.\.\.prettier,\s*\n\s*[)\]];/.test(cfg), "...prettier not last in eslint config");
+  assert.ok(/prettier,\s*\n\s*[)\]];/.test(cfg), "...prettier not last in eslint config");
 
   assert.ok(await exists(path.join(projectPath, ".prettierrc")), ".prettierrc missing");
   assert.ok(await exists(path.join(projectPath, ".env.example")), ".env.example missing");

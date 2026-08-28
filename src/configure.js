@@ -70,11 +70,19 @@ async function configureTsconfig(projectPath) {
     );
   }
 
-  // Create/update root tsconfig.json with references
+  // Create/update root tsconfig.json with references.
+  // Preserve the ./tsconfig.node.json reference (Vite config) when present.
   const rootTsconfigPath = path.join(projectPath, "tsconfig.json");
+  const nodeConfigPath = path.join(projectPath, "tsconfig.node.json");
+  const references = [{ path: "./tsconfig.app.json" }];
+  try {
+    await fsp.access(nodeConfigPath);
+    references.push({ path: "./tsconfig.node.json" });
+  } catch {}
+
   const rootTsconfig = {
     files: [],
-    references: [{ path: "./tsconfig.app.json" }],
+    references,
   };
   await fsp.writeFile(
     rootTsconfigPath,
@@ -100,7 +108,7 @@ async function addPathAliasesToViteConfig(projectPath, ext) {
   try {
     let content = await readFileContent(viteConfigPath);
 
-    if (content.includes("tsconfigPaths")) return;
+    if (content.includes("find: '@'")) return;
 
     const lines = content.split("\n");
 
@@ -112,8 +120,8 @@ async function addPathAliasesToViteConfig(projectPath, ext) {
 
     // Insert path/fileURLToPath imports after last import
     const newImports = [
-      'import path from "path";',
-      'import { fileURLToPath } from "url";',
+      "import path from 'path';",
+      "import { fileURLToPath } from 'url';",
       "const __dirname = path.dirname(fileURLToPath(import.meta.url));",
     ];
     lines.splice(lastImportIdx + 1, 0, ...newImports);
@@ -121,13 +129,10 @@ async function addPathAliasesToViteConfig(projectPath, ext) {
     let result = lines.join("\n");
 
     const aliasArray = getViteAliases()
-      .map(
-        (a) =>
-          `{ find: "${a.find}", replacement: ${a.replacement} }`
-      )
-      .join(",\n              ");
+      .map((a) => `{ find: '${a.find}', replacement: ${a.replacement} }`)
+      .join(",\n      ");
 
-    const resolveBlock = `resolve: {\n    tsconfigPaths: true,\n    alias: [\n              ${aliasArray}\n    ],\n  }`;
+    const resolveBlock = `resolve: {\n    alias: [\n      ${aliasArray},\n    ],\n  }`;
 
     if (result.includes("resolve:")) {
       result = result.replace(/resolve:\s*\{/, resolveBlock);

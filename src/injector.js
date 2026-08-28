@@ -72,6 +72,7 @@ export async function injectFormatter(projectPath, templatesDir, responses) {
       pkg.scripts["format:check"] = "prettier --check .";
     } else if (responses.formatter === "oxfmt") {
       pkg.scripts.format = "oxfmt .";
+      pkg.scripts["format:check"] = "oxfmt --check .";
     }
     await fsp.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
   } catch {}
@@ -105,11 +106,14 @@ async function wireEslintPrettier(projectPath, language) {
 
     let result = lines.join("\n");
 
-    // Append ...prettier as the LAST element of the eslint config.
+    // Append prettier as the LAST element of the eslint config.
+    // eslint-config-prettier exports a flat-config object (not an iterable),
+    // so it must be passed by reference, not spread — passing `...prettier`
+    // breaks under ESLint's jiti-based TS config loading.
     // The JS template exports an array (`export default [...]`); the TS
     // template uses a function call (`export default tseslint.config(...)`).
     const pushLast = (_, head, tail) =>
-      head.replace(/,\s*$/, "") + ",\n  ...prettier," + tail;
+      head.replace(/,\s*$/, "") + ",\n  prettier," + tail;
     if (result.includes("tseslint.config(")) {
       result = result.replace(
         /(export default tseslint\.config\([\s\S]*?)(\n\s*\);)/,
@@ -247,11 +251,18 @@ async function injectTesting(projectPath, templatesDir, framework, language, arc
       await fsp.access(jestSetupSrc);
       await fsp.copyFile(jestSetupSrc, path.join(projectPath, `jest.setup.${configExt}`));
     } catch {}
+
+    // Unified Babel transform config for Jest (env + react + typescript presets).
+    const babelSrc = path.join(testingDir, "babel.config.cjs");
+    try {
+      await fsp.access(babelSrc);
+      await fsp.copyFile(babelSrc, path.join(projectPath, "babel.config.cjs"));
+    } catch {}
   }
 
-  // Copy test file
+  // Copy test file (architecture-scoped so the App import path resolves)
   const testExt = language === "ts" ? "tsx" : "jsx";
-  const testSrc = path.join(testingDir, `src/__tests__/App.test.${testExt}`);
+  const testSrc = path.join(testingDir, architecture, `src/__tests__/App.test.${testExt}`);
   try {
     await fsp.access(testSrc);
     const testDest = path.join(projectPath, "src", "__tests__", `App.test.${testExt}`);

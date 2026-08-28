@@ -59,7 +59,7 @@ async function read(dir, file) {
   return fsp.readFile(path.join(dir, file), "utf8");
 }
 
-test("eslint + prettier (JS) injects config, scripts, and wires ...prettier last (array form)", async () => {
+test("eslint + prettier (JS) injects config, scripts, and wires prettier last (array form)", async () => {
   const dir = await makeProject({ eslintConfig: JS_ESLINT, ext: "js" });
   await injectFormatter(dir, TEMPLATES_DIR, { formatter: "prettier", linter: "eslint", language: "js" });
 
@@ -70,16 +70,16 @@ test("eslint + prettier (JS) injects config, scripts, and wires ...prettier last
 
   const cfg = await read(dir, "eslint.config.js");
   assert.ok(cfg.includes('import prettier from "eslint-config-prettier";'));
-  assert.ok(/\.\.\.prettier,\s*\n\s*[)\]];/.test(cfg), "...prettier not last");
+  assert.ok(/prettier,\s*\n\s*[)\]];/.test(cfg), "prettier not last");
 });
 
-test("eslint + prettier (TS) injects ...prettier last (tseslint.config form)", async () => {
+test("eslint + prettier (TS) injects prettier last (tseslint.config form)", async () => {
   const dir = await makeProject({ eslintConfig: TS_ESLINT, ext: "ts" });
   await injectFormatter(dir, TEMPLATES_DIR, { formatter: "prettier", linter: "eslint", language: "ts" });
 
   const cfg = await read(dir, "eslint.config.ts");
   assert.ok(cfg.includes('import prettier from "eslint-config-prettier";'));
-  assert.ok(/\.\.\.prettier,\s*\n\s*[)\]];/.test(cfg), "...prettier not last in tseslint.config");
+  assert.ok(/prettier,\s*\n\s*[)\]];/.test(cfg), "prettier not last in tseslint.config");
 });
 
 test("oxlint + oxfmt injects .oxfmtrc.json and oxfmt script, leaves eslint config untouched", async () => {
@@ -114,7 +114,7 @@ test("none formatter is a no-op", async () => {
   assert.equal(pkg.scripts.format, undefined);
 });
 
-test("eslint + prettier is idempotent (re-run adds exactly one import and one ...prettier)", async () => {
+test("eslint + prettier is idempotent (re-run adds exactly one import and one prettier)", async () => {
   const dir = await makeProject({ eslintConfig: JS_ESLINT, ext: "js" });
   const responses = { formatter: "prettier", linter: "eslint", language: "js" };
   await injectFormatter(dir, TEMPLATES_DIR, responses);
@@ -122,7 +122,7 @@ test("eslint + prettier is idempotent (re-run adds exactly one import and one ..
 
   const cfg = await read(dir, "eslint.config.js");
   assert.equal((cfg.match(/eslint-config-prettier/g) || []).length, 1);
-  assert.equal((cfg.match(/\.\.\.prettier/g) || []).length, 1);
+  assert.equal((cfg.match(/prettier,\n/g) || []).length, 1);
 });
 
 test("quick setup falls back to the current folder name when no project name argument is passed", () => {

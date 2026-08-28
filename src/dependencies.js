@@ -71,11 +71,14 @@ export async function installAllDeps(responses, pkg, cwd) {
   } else if (responses.testing === "jest") {
     devDeps.push(
       "jest",
-      "ts-jest",
-      "@types/jest",
+      "jest-environment-jsdom",
       "@testing-library/react",
       "@testing-library/jest-dom",
-      "jsdom"
+      "jsdom",
+      "babel-jest",
+      "@babel/preset-env",
+      "@babel/preset-react",
+      "@babel/preset-typescript"
     );
   }
 
@@ -84,6 +87,8 @@ export async function installAllDeps(responses, pkg, cwd) {
     devDeps.push("eslint", "@eslint/js", "eslint-plugin-react-hooks", "eslint-plugin-react-refresh", "globals");
     if (responses.language === "ts") {
       devDeps.push("typescript-eslint");
+      // ESLint >= 10 loads TS config files (eslint.config.ts) via jiti.
+      devDeps.push("jiti");
     }
   } else if (responses.linter === "oxlint") {
     devDeps.push("oxlint");

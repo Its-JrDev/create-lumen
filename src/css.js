@@ -14,6 +14,18 @@ export async function setupCssFramework({
   process.chdir(projectPath);
   const cssDir = path.join(templatesDir, "css");
   const indexCssPath = path.join(projectPath, "src", "index.css");
+  // Feature-based main.* imports ./styles/globals.css; component-based main.*
+  // imports ./index.css. The chosen framework's styles must land in the file
+  // the architecture actually imports.
+  const globalsCssPath = path.join(projectPath, "src", "styles", "globals.css");
+
+  async function writeCss(content) {
+    await fsp.writeFile(indexCssPath, content, "utf8");
+    try {
+      await fsp.access(globalsCssPath);
+      await fsp.writeFile(globalsCssPath, content, "utf8");
+    } catch {}
+  }
 
   if (cssFramework === "tailwind") {
     const viteConfigFile = `vite.config.${language === "ts" ? "ts" : "js"}`;
@@ -28,7 +40,7 @@ export async function setupCssFramework({
       path.join(cssDir, "tailwind", "src", "index.css"),
       "utf8"
     );
-    await fsp.writeFile(indexCssPath, indexCssContent, "utf8");
+    await writeCss(indexCssContent);
   } else if (cssFramework === "bootstrap") {
     const mainFile = path.join(projectPath, "src", `main.${ext}`);
     if (fs.existsSync(mainFile)) {
@@ -45,13 +57,13 @@ export async function setupCssFramework({
       path.join(cssDir, "bootstrap", "src", "index.css"),
       "utf8"
     );
-    await fsp.writeFile(indexCssPath, indexCssContent, "utf8");
+    await writeCss(indexCssContent);
   } else {
     const indexCssContent = await fsp.readFile(
       path.join(cssDir, "none", "src", "index.css"),
       "utf8"
     );
-    await fsp.writeFile(indexCssPath, indexCssContent, "utf8");
+    await writeCss(indexCssContent);
   }
 
   // Clean up Vite's default App.css

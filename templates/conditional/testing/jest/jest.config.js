@@ -1,5 +1,4 @@
-/** @type {import('jest').Config} */
-module.exports = {
+export default {
   testEnvironment: "jsdom",
   roots: ["<rootDir>/src"],
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],

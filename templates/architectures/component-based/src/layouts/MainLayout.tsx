@@ -1,5 +1,3 @@
-import React from "react";
-
 interface MainLayoutProps {
   children: React.ReactNode;
 }

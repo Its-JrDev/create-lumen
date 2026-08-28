@@ -1,6 +1,5 @@
-import React, { createContext, useState } from "react";
-
-export const AppContext = createContext(null);
+import { useState } from "react";
+import { AppContext } from "./app-context";
 
 export function AppProvider({ children }) {
   const [theme, setTheme] = useState("light");

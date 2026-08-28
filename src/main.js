@@ -15,6 +15,7 @@ import { getUserInputs, onCancel } from "@/prompts.js";
 import { runBaseInstall, runGitInit, runViteCreate } from "@/scaffold.js";
 import { installAllDeps } from "@/dependencies.js";
 import { generateReadme } from "@/readme.js";
+import { runProjectFormat } from "@/format.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -211,6 +212,19 @@ export async function main(options = {}) {
       readmeSpin.stop(chalk.green("README.md and LICENSE generated."));
     } catch (err) {
       readmeSpin.stop(chalk.red("Failed to generate README.md and LICENSE."));
+      throw err;
+    }
+  }
+
+  // 13.5 Format the freshly generated project so it is canonical on init
+  if (responses.formatter && responses.formatter !== "none") {
+    const fmtPassSpin = spinner();
+    fmtPassSpin.start(`Formatting project with ${responses.formatter}...`);
+    try {
+      await runProjectFormat(projectPath, responses);
+      fmtPassSpin.stop(chalk.green("Project formatted."));
+    } catch (err) {
+      fmtPassSpin.stop(chalk.red("Failed to format project."));
       throw err;
     }
   }
