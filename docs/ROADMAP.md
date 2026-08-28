@@ -148,5 +148,10 @@ Proposals only — **no work has started** on these:
 - **True headless e2e** — drive `bin/cli.js` through the prompts (current
 
   harnesses call `src/` directly, so they are integration tests, not CLI e2e).
+- **Separate `typecheck` script in generated projects** — add an explicit
+  `typecheck` (`tsc -b`) script to generated TS projects, kept independent of
+  the `build` script (`build` stays as `vite build`). Scaffolds already
+  type-check clean under `strict` mode (gated by `verify:installed`);
+  this item only wires a user-facing script + README row.
 - Expanded test coverage for additional option combinations.
 

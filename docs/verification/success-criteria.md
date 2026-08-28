@@ -15,7 +15,8 @@ passes when the following hold for **every** generated scaffold in scope.
   stateManagement × iconLibrary × apiClient × linter × formatter) that the
   generator accepts. Total ≈ 11,664 combos.
 - **Installed** (`verify:installed`): 4 sampled cells that stress the build &
-  runtime surface, or the full stratified set with `FULL=1`.
+  runtime surface, or the full stratified set with `FULL=1`. TS cells in this
+  gate additionally run `tsc -b` (criterion 8).
 
 ## Hard gates (non-negotiable for a passing run)
 
@@ -28,7 +29,8 @@ passes when the following hold for **every** generated scaffold in scope.
 | 5 | Deterministic output | Generating the same cell twice yields byte-identical trees |
 | 6 | Config wired correctly | Per-cell audit: chosen rc files exist, script names match the README table, vite `@` alias present (non-tailwind), `main.*` chosen language only |
 | 7 | Real-world dependency closure | For eslint+TS cells: `jiti` declared; every script-referenced tool binary exists post-install |
-| 8 | Runtime correctness | `vitest run` / `jest --ci` exit 0 on the scaffold's own test; `npm run build` produces a bundle (TS cells also type-check via `tsc -b`) |
+| 8 | Type correctness (TS cells, installed gate) | `tsc -b` exit 0 over the scaffold's tsconfig graph — strict mode, zero errors, no deprecation warnings |
+| 9 | Runtime correctness | `vitest run` / `jest --ci` exit 0 on the scaffold's own test; `npm run build` produces a bundle |
 
 ## Interpretive rules
 

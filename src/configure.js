@@ -31,8 +31,13 @@ async function configureTsconfig(projectPath) {
     const config = JSON.parse(content);
 
     if (!config.compilerOptions) config.compilerOptions = {};
-    config.compilerOptions.baseUrl = ".";
+    config.compilerOptions.strict = true;
     config.compilerOptions.paths = paths;
+    if (config.compilerOptions.types?.length && !config.compilerOptions.types.includes("vite/client")) {
+      config.compilerOptions.types.push("vite/client");
+    } else if (!config.compilerOptions.types) {
+      config.compilerOptions.types = ["vite/client"];
+    }
 
     await fsp.writeFile(
       tsconfigAppPath,
@@ -58,7 +63,7 @@ async function configureTsconfig(projectPath) {
         noUnusedLocals: true,
         noUnusedParameters: true,
         noFallthroughCasesInSwitch: true,
-        baseUrl: ".",
+        types: ["vite/client"],
         paths,
       },
       include: ["src"],

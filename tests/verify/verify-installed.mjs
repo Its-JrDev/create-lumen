@@ -149,7 +149,13 @@ async function gateCell(responses, projectPath) {
     runP(["npm", "test", "--", "--ci"], "jest --ci");
   }
 
-  // --- Build (vite build; TS also runs tsc -b) ---
+  // --- Type check (TS only): tsc -b over the generated tsconfig graph ---
+  if (responses.language === "ts") {
+    runP([bin("tsc"), "-b"], "tsc -b (zero errors)");
+  }
+
+  // --- Build (vite build; typechecking is gated separately per the generated
+  //      scripts, which intentionally keep build independent of tsc) ---
   runP(["npm", "run", "build"], "npm run build");
 
   return results;

@@ -18,6 +18,10 @@ signature.
 | React errors like `'React' is defined but never used` / `react-refresh/only-export-components` for `export const AppContext` | Vite's modern transform enabled (no `import React` needed); React Fast Refresh forbids non-component exports alongside components | Remove unused `React` imports; **split contexts** into `app-context.{js,ts}` and leave only components in `AppContext.{jsx,tsx}` |
 | `react-hooks/set-state-in-effect` (react-hooks v7) in `AppContext.tsx` | Syncing `setTheme` from an effect is flagged by the new React guidance | Initialize with a lazy `useState(() => localStorage.getItem(...) ?? "light")`; effects only persist |
 | Unused import only caught at runtime (e.g. `useEffect` in `AppContext.tsx`) | ESLint/oxlint can miss specifiers that a paired tool (tsc `noUnusedLocals`) catches | TS templates must exercise every imported binding; installed harness's `tsc -b` gate is the backstop |
+| `TS5101: Option 'baseUrl' is deprecated` | TypeScript 6.0 deprecates `baseUrl`; templates injected it into `tsconfig.app.json` | Drop `baseUrl`; keep `paths` (`./src/*`), which resolve relative to the config file since TS 4.1 (`src/configure.js` `configureTsconfig`) |
+| `TS2882: Cannot import CSS file '*.css'` / `TS2339: 'env' does not exist on ImportMeta` | Cached/fallback `tsconfig.app.json` lacked `"types": ["vite/client"]` | Always add `vite/client` to the compilerOptions `types` array in `configureTsconfig` |
+| `TS7006/TS7031/TS7019` (implicit any) across template components/hooks/stores | Generated `tsconfig.app.json` wasn't strict, so untyped props/params slipped through | `configureTsconfig` sets `strict: true`; type children (`ReactNode`), `useLocalStorage<T>`, `cn(...inputs)`, zustand `create<CounterState>` and redux `PayloadAction`/`RootState`/`AppDispatch` |
+| `Property 'toBeInTheDocument' does not exist` in jest TS tests | `jest.setup.ts` lives outside the `src` tsconfig program, so its jest-dom augmentation never loads for `*.test.tsx` | Import `@testing-library/jest-dom` in the TS test template itself (vitest cells already covered via `src/test/setup.ts`) |
 
 ## Dependency wiring
 
