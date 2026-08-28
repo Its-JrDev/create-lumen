@@ -52,7 +52,7 @@ interactive prompt flow.
 
 ---
 
-## 📦 Version 1.1.0 (Released) — Prettier &amp; Oxfmt integration
+## 📦 Version 1.1.x (Released) — Prettier &amp; Oxfmt integration
 
 Dynamic code formatter support based on the chosen linter. This improves
 
@@ -153,5 +153,10 @@ Proposals only — **no work has started** on these:
   the `build` script (`build` stays as `vite build`). Scaffolds already
   type-check clean under `strict` mode (gated by `verify:installed`);
   this item only wires a user-facing script + README row.
+- **API REST services layer** — the Axios/fetch **config** (base client, auth
+  header) already ships in `templates/conditional/{axios,fetch}`; add a
+  generated services layer with CRUD methods (`get`, `getById`, `create`,
+  `update`, `delete`, …) scaffolded from an API resource, wired to
+  `@/config/constants` and exported through the barrel files.
 - Expanded test coverage for additional option combinations.
 
