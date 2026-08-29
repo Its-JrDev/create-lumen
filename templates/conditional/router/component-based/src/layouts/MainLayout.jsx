@@ -5,7 +5,12 @@ export function MainLayout() {
     <div
       style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
     >
-      <header style={{ padding: "16px 24px", borderBottom: "1px solid #e5e7eb" }}>
+      <header
+        style={{
+          padding: "16px 24px",
+          borderBottom: "1px solid var(--color-border)",
+        }}
+      >
         <h2 style={{ fontSize: "1.25rem", fontWeight: 600 }}>Lumen</h2>
       </header>
       <main
@@ -22,9 +27,9 @@ export function MainLayout() {
       <footer
         style={{
           padding: "16px 24px",
-          borderTop: "1px solid #e5e7eb",
+          borderTop: "1px solid var(--color-border)",
           textAlign: "center",
-          color: "#6b7280",
+          color: "var(--color-muted)",
         }}
       >
         <p>Built with Lumen</p>

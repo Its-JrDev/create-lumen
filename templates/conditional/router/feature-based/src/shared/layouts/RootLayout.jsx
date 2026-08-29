@@ -8,7 +8,7 @@ export function RootLayout() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#f9fafb",
+        backgroundColor: "var(--color-bg)",
       }}
     >
       <Outlet />

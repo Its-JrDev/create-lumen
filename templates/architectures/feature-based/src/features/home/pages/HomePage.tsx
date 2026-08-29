@@ -7,13 +7,18 @@ export function HomePage() {
         style={{
           fontSize: "2.25rem",
           fontWeight: 700,
-          color: "#111827",
+          color: "var(--color-fg)",
           marginBottom: "1rem",
         }}
       >
         Welcome to Lumen
       </h1>
-      <p style={{ color: "#4b5563", marginBottom: "2rem" }}>
+      <p
+        style={{
+          color: "var(--color-muted)",
+          marginBottom: "2rem",
+        }}
+      >
         Your React + Vite project is ready. Start building!
       </p>
       <Button>Get Started</Button>

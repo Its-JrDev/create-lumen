@@ -29,6 +29,10 @@ export async function injectArchitecture(projectPath, templatesDir, architecture
   const defaultAppJsx = path.join(projectPath, "src", "App.jsx");
   try { await fsp.rm(defaultAppTsx, { force: true }); } catch {}
   try { await fsp.rm(defaultAppJsx, { force: true }); } catch {}
+  // Remove Vite's default index.css (framework CSS lives in src/styles/,
+  // copied below — never at the src/ root).
+  try { await fsp.rm(path.join(projectPath, "src", "index.css"), { force: true }); } catch {}
+  try { await fsp.rm(path.join(projectPath, "src", "App.css"), { force: true }); } catch {}
 
   // Copy the architecture tree into the project's src/
   await copyDirRecursive(srcDir, path.join(projectPath, "src"), langFileFilter(language));
@@ -243,6 +247,36 @@ export async function injectConditionals(projectPath, templatesDir, responses, a
   if (architecture === "feature-based") {
     await injectCreateFeatureScript(projectPath, templatesDir, language);
   }
+
+  // A .gitkeep only keeps a folder alive when that folder holds nothing else;
+  // once an overlay writes real files into it the placeholder is redundant.
+  await pruneRedundantGitkeeps(projectPath);
+}
+
+// Remove .gitkeep placeholders from src/ directories that now contain real
+// files (e.g. component-based `services/.gitkeep` after the axios/fetch client
+// overlay lands). A folder with nothing but its placeholder keeps it.
+async function pruneRedundantGitkeeps(projectPath) {
+  const walk = async (dir) => {
+    let entries;
+    try {
+      entries = await fsp.readdir(dir, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      if (entry.isDirectory()) {
+        await walk(path.join(dir, entry.name));
+      }
+    }
+    if (entries.some((e) => e.name === ".gitkeep")) {
+      const hasRealFiles = entries.some((e) => e.isFile() && e.name !== ".gitkeep");
+      if (hasRealFiles) {
+        await fsp.rm(path.join(dir, ".gitkeep"), { force: true });
+      }
+    }
+  };
+  await walk(path.join(projectPath, "src"));
 }
 
 // Overlays that ship presentational components (router, icons) carry optional
@@ -431,7 +465,7 @@ async function updateMainWithProvider(projectPath, stateType, architecture, ext)
       if (!content.includes("StoreProvider")) {
         content = content.replace(
           /import App from ['"]\.\/App['"]\n?/,
-          "import App from './App'\nimport { StoreProvider } from './context/StoreProvider'\n"
+          "import App from './App'\nimport { StoreProvider } from './providers/StoreProvider'\n"
         );
         content = content.replace(
           /<App \/>/,

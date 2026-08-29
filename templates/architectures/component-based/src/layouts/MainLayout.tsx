@@ -8,20 +8,28 @@ export function MainLayout({ children }: MainLayoutProps) {
       <header
         style={{
           padding: "16px 24px",
-          borderBottom: "1px solid #e5e7eb",
+          borderBottom: "1px solid var(--color-border)",
         }}
       >
         <h2 style={{ fontSize: "1.25rem", fontWeight: 600 }}>Lumen</h2>
       </header>
-      <main style={{ flex: 1, padding: "24px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <main
+        style={{
+          flex: 1,
+          padding: "24px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         {children}
       </main>
       <footer
         style={{
           padding: "16px 24px",
-          borderTop: "1px solid #e5e7eb",
+          borderTop: "1px solid var(--color-border)",
           textAlign: "center",
-          color: "#6b7280",
+          color: "var(--color-muted)",
         }}
       >
         <p>Built with Lumen</p>

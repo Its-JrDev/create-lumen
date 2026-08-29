@@ -10,8 +10,11 @@ export function Button({
   ...props
 }: ButtonProps) {
   const styles = {
-    primary: { backgroundColor: "#2563eb", color: "white" },
-    secondary: { backgroundColor: "#e5e7eb", color: "#1f2937" },
+    primary: { backgroundColor: "var(--color-primary)", color: "white" },
+    secondary: {
+      backgroundColor: "var(--color-border)",
+      color: "var(--color-fg)",
+    },
   };
 
   return (

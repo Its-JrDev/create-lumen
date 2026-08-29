@@ -1,7 +1,11 @@
-import { useEffect, useState } from "react";
-import { ThemeContext } from "../contexts/themecontext";
+import {
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import { AppContext } from "./appcontext";
 
-export function ThemeProvider({ children }) {
+export function AppProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState(
     () => localStorage.getItem("theme") ?? "light"
   );
@@ -13,8 +17,8 @@ export function ThemeProvider({ children }) {
   }, [theme]);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <AppContext.Provider value={{ theme, setTheme }}>
       {children}
-    </ThemeContext.Provider>
+    </AppContext.Provider>
   );
 }
