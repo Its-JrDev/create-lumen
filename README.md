@@ -87,35 +87,33 @@ Feature-based (example):
 
 ```
 src/
-├── app
+├── app               # App shell and global providers
 │   ├── App.tsx
 │   ├── providers
 │   │   └── ThemeProvider.tsx
 │   └── router.tsx
-├── components
-│   └── ui
-├── config
-│   └── constants.ts
-├── features
-│   └── logout
+├── features           # Feature modules (business logic owned per feature)
+│   └── home
 │       ├── components
+│       ├── hooks
+│       ├── index.ts    # public feature barrel
 │       ├── layouts
 │       ├── pages
 │       ├── services
-│       └── store
-├── hooks
-│   ├── index.ts
-│   └── useLocalStorage.ts
-├── index.css
-├── lib
-├── main.tsx
-├── stores
-├── styles
-│   └── globals.css
-├── test
-│   └── setup.ts
-├── types
-└── utils
+│       ├── store
+│       └── types
+└── shared             # Reusable, business-agnostic resources
+    ├── api            # HTTP client (fetch) — not an external dependency
+    ├── components
+    │   └── ui
+    ├── hooks
+    ├── layouts
+    ├── lib            # Third-party library init (e.g. axios client)
+    ├── stores
+    ├── styles
+    │   └── globals.css
+    ├── types
+    └── utils
 ```
 
 Component-based (example):

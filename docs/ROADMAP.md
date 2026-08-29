@@ -141,6 +141,51 @@ consistency and developer experience by scaffolding the formatter config and
 
 ---
 
+## 📦 Version 1.2.0 (Released) — API client layer + feature-based `shared/` housekeeping
+
+Rework of the data-fetching layer and the feature-based architecture layout so
+the generated scaffolds ship a clear, dependency-honest structure and a named
+`api` client.
+
+### What shipped
+
+- **Axios as `api`** — the axios client is refactored from a monolithic
+  `axios.ts` into a split layer (`api.config` + `api.client`) and is exported
+  end-to-end as `api` (client default export + barrel re-export), not `apiClient`.
+  `user.service` performs real CRUD (`get`/`post`/`put`/`delete`).
+- **Fetch layer parity** — the fetch client mirrors the axios layout
+  (`api.config` + `api.client`) with `get`/`post`/`put`/`delete`, configured to
+  intercept `VITE_API_URL`. `user.service` calls the named `api` methods and
+  never calls `fetch()` directly.
+- **Dropped `config/constants`** — both clients inline `VITE_API_URL`; the
+  unused `src/config/constants.*` file is no longer shipped.
+- **Feature-based `shared/` grouping** — reusable resources moved under
+  `src/shared/` (`api`, `components`, `hooks`, `layouts`, `lib`, `stores`,
+  `styles`, `types`, `utils`); the feature tree keeps only `app/`, `features/`
+  and `shared/` at the top level.
+- **api-vs-lib rule** — the **fetch** client lives in `src/shared/api/` (not an
+  external dependency) while the **axios** client lives in `src/shared/lib/axios/`
+  (third-party lib init). Subfolders lean on a barrel for the named `api`
+  export.
+- **Removed unused barrels** — non-consumed barrel files (comp
+  `layouts/hooks/utils/services` indexes, feat `home/services` index) are
+  deleted while the real files (`MainLayout`, `useLocalStorage`, `cn`) are kept;
+  `.gitkeep` placeholders preserve folders that would otherwise disappear.
+- **Public feature barrel** — `features/home/index.ts` re-exports the feature's
+  public surface; `App` and the router import `@/features/home`.
+- **Removed `interfaces/`** — the per-feature `interfaces` folder is dropped;
+  types live in `shared/types` (global) with a per-feature `types/` placeholder.
+- Generated projects ship a `typecheck` script (`tsc -b`), independent of
+  `build` (which stays `vite build`).
+
+### Verification
+
+`npm test` (46 unit + smoke), `verify:offline` (9 stratified cells) and the
+4-variant `tsc`/build surface. Full offline matrix and real-install gates are
+run before release (see `docs/verification/`).
+
+---
+
 ## 🔮 Future / Ideas (unscheduled)
 
 Proposals only — **no work has started** on these:
@@ -148,15 +193,9 @@ Proposals only — **no work has started** on these:
 - **True headless e2e** — drive `bin/cli.js` through the prompts (current
 
   harnesses call `src/` directly, so they are integration tests, not CLI e2e).
-- **Separate `typecheck` script in generated projects** — add an explicit
-  `typecheck` (`tsc -b`) script to generated TS projects, kept independent of
-  the `build` script (`build` stays as `vite build`). Scaffolds already
-  type-check clean under `strict` mode (gated by `verify:installed`);
-  this item only wires a user-facing script + README row.
-- **API REST services layer** — the Axios/fetch **config** (base client, auth
-  header) already ships in `templates/conditional/{axios,fetch}`; add a
-  generated services layer with CRUD methods (`get`, `getById`, `create`,
-  `update`, `delete`, …) scaffolded from an API resource, wired to
-  `@/config/constants` and exported through the barrel files.
+- **Generated API resource services** — today `user.service` (per API client) is
+  a hand-written example; add a generator that scaffolds a full CRUD service
+  (`get`, `getById`, `create`, `update`, `delete`, …) for an API resource,
+  wiring it to the shared `api` client with types from `shared/types`.
 - Expanded test coverage for additional option combinations.
 
