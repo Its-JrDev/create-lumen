@@ -141,77 +141,218 @@ consistency and developer experience by scaffolding the formatter config and
 
 ---
 
-## 🚧 Version 1.2.x (Unreleased) — API layer + feature-based `shared/` + framework-aware styling + data-router parity
+## 🚧 Version 1.2.x (Unreleased) — API layer + feature-based `shared/` + framework-aware styling + data-router parity + providers + themes
 
-Two rework threads land together in the next release: the data-fetching layer
-and feature-based `shared/` housekeeping (the old 1.2.0 plan), and the
-framework-driven styling + router-parity pass built on top of it.
+Entries are listed newest first (blog order). Each entry links the commit
+that landed it; for older work the commit SHA in `git log` is the canonical
+reference.
 
-### What shipped
+---
 
-- **Axios as `api`** — the axios client is refactored from a monolithic
-  `axios.ts` into a split layer (`api.config` + `api.client`) and is exported
-  end-to-end as `api` (client default export + barrel re-export), not `apiClient`.
-  `user.service` performs real CRUD (`get`/`post`/`put`/`delete`).
-- **Fetch layer parity** — the fetch client mirrors the axios layout
-  (`api.config` + `api.client`) with `get`/`post`/`put`/`delete`, configured to
-  intercept `VITE_API_URL`. `user.service` calls the named `api` methods and
-  never calls `fetch()` directly.
-- **Dropped `config/constants`** — both clients inline `VITE_API_URL`; the
-  unused `src/config/constants.*` file is no longer shipped.
-- **Feature-based `shared/` grouping** — reusable resources moved under
-  `src/shared/` (`api`, `components`, `hooks`, `layouts`, `lib`, `stores`,
-  `styles`, `types`, `utils`); the feature tree keeps only `app/`, `features/`
-  and `shared/` at the top level.
-- **api-vs-lib rule** — the **fetch** client lives in `src/shared/api/` (not an
-  external dependency) while the **axios** client lives in `src/shared/lib/axios/`
-  (third-party lib init). Subfolders lean on a barrel for the named `api` export.
-- **Removed unused barrels** — non-consumed barrel files (comp
-  `layouts/hooks/utils/services` indexes, feat `home/services` index) are
-  deleted while the real files (`MainLayout`, `useLocalStorage`, `cn`) are kept;
-  `.gitkeep` placeholders preserve folders that would otherwise disappear.
-- **Public feature barrel** — `features/home/index.ts` re-exports the feature's
-  public surface; `App` and the router import `@/features/home`.
-- **Removed `interfaces/`** — the per-feature `interfaces` folder is dropped;
-  types live in `shared/types` (global) with a per-feature `types/` placeholder.
-- Generated projects ship a `typecheck` script (`tsc -b`), independent of
-  `build` (which stays `vite build`).
+### 2026-08-29 — CSS framework naming: `main.css` for vanilla, `globals.css` for tailwind/bootstrap + `themes.css` everywhere
+
+`6f6e46c` · `feat(v1.2.x): CSS framework naming — main.css for vanilla, globals.css for tailwind/bootstrap + themes.css`
+
+- The vanilla stylesheet renames `index.css` → `main.css`; the other two
+  frameworks keep `globals.css` (their idiomatic name — it carries the
+  framework directive, not a hand-written global stylesheet).
+- Every framework now ships a `themes.css` next to the main stylesheet,
+  with the idiomatic shape of its ecosystem:
+  - **`none`** (vanilla): `:root { --color-bg, --color-fg, --color-muted,
+    --color-primary, --color-border }` + `:root[data-theme="dark"] { … }`.
+  - **`tailwind` v4**: `@custom-variant dark (&:where([data-theme="dark"],
+    [data-theme="dark"] *))` + `@theme { --color-primary }`. Tailwind
+    recognizes the `data-theme` attribute on `<html>`.
+  - **`bootstrap` 5.3+**: `:root[data-bs-theme="light|dark"] { --bs-primary,
+    --bs-body-bg, --bs-body-color }`. Bootstrap reads its own `data-bs-theme`.
+- `src/css.js` writes **only** into the architecture-specific `styles/`
+  folder (`shared/styles/` for feat, `styles/` for comp); never into
+  `src/index.css`. A new `syncMainCssImport` step rewrites the import in
+  `main.{ts,jsx}` to the framework-correct filename (so `none` projects
+  import `main.css`, the others import `globals.css`).
+- Vite's stale `src/index.css` is removed (`src/injector.js` removes it
+  before the architecture copy; `src/css.js` `deleteIfExists` cleans it up
+  as a second net). `App.css` cleanup was already in place.
+
+_Tests:_ exhaustive + verify-offline both assert `themes.css` presence,
+correct main stylesheet by framework (`main.css` for `none`,
+`globals.css` otherwise), `var(--color-)` consumption in vanilla CSS, and
+absence of `src/index.css`. 9/9 default cells PASS.
+
+---
+
+### 2026-08-29 — `providers/` consolidation (feat split, comp co-located)
+
+`a952a74` · `feat(v1.2.x): providers consolidation + App wiring + CSS variables in components`
+
+- **feature-based** (split across directories):
+  - `app/contexts/themecontext.{ts,js}`: pure `createContext` +
+    `ThemeContextValue` interface (no JSX, no component export).
+  - `app/providers/ThemeProvider.{tsx,jsx}`: the Provider component,
+    imports `ThemeContext` from `../contexts/themecontext`. **Only export.**
+  - `app/hooks/useTheme.{ts,js}`: hook that reads the context. Throws if
+    used outside a `<ThemeProvider>`.
+  - App wraps with `<ThemeProvider>` (previously orphan).
+- **component-based** (split across files inside `providers/`):
+  - `providers/appcontext.{ts,js}`: `createContext` + `AppContextValue`.
+  - `providers/AppProvider.{tsx,jsx}`: Provider component, **only export**,
+    imports `AppContext` from `./appcontext`.
+  - `hooks/useApp.{ts,js}`: hook that reads `AppContext`.
+  - `providers/.gitkeep` placeholder; `pruneRedundantGitkeeps` removes it
+    when redux overlay populates `providers/StoreProvider`.
+  - App wraps with `<AppProvider>`.
+- Fast Refresh rule `react-refresh/only-export-components`: contexts and
+  hooks must live in separate files from the Provider. Feat splits at
+  directory level (`contexts/` + `providers/`); comp splits at file level
+  inside `providers/`.
+- Redux overlay: `StoreProvider.{tsx,jsx}` moves from
+  `context/StoreProvider` → `providers/StoreProvider`. Injector
+  `updateMainWithProvider` patched to import from `./providers/StoreProvider`.
+- App wiring in both router overlays: feat
+  `<App>` wraps `<ThemeProvider><AppRouter/></ThemeProvider>`; comp
+  `<App>` wraps `<AppProvider><AppRoutes/></AppProvider>`.
+- All presentational components (Button, Home/HomePage, MainLayout,
+  RootLayout, App shells, router placeholders, auth.routes protected page)
+  consume `var(--color-*)` instead of hex codes, so the theme wiring
+  actually repaints when `data-theme` switches.
+
+_Tests:_ exhaustive + verify-offline arch-aware provider asserts
+(feat needs `app/contexts/themecontext.{ts,js}` + `app/providers/ThemeProvider.{tsx,jsx}` +
+`app/hooks/useTheme.{ts,js}`; comp needs `providers/appcontext.{ts,js}` +
+`providers/AppProvider.{tsx,jsx}` + `hooks/useApp.{ts,js}` and asserts
+absence of legacy `src/context/`). `AppProvider`/`ThemeProvider` both
+set `document.documentElement.dataset.theme` on each theme change.
+
+---
+
+### 2026-08-29 — Router as a folder, with split providers (feat per-area, comp centralized)
+
+`c7e729a` · `feat(v1.2.x): router as folder with split providers (feat per-area, comp centralized)`
+
+- **feature-based** (per-area): `src/app/router/{index,guards,routes}/`
+  - `index.tsx` (`createBrowserRouter` + `RouterProvider`).
+  - `guards/`: `AuthGuard` (redirects to `/login` when not authenticated) +
+    `RoleGuard` (RBAC example, redirects to `/login` when role mismatch).
+  - `routes/`: `home.routes` (index → `HomePage`) + `auth.routes` (path
+    `'admin'` wrapping `AuthGuard > RoleGuard > inline protected page`).
+  - App wraps `<AppRouter>`. Old `src/app/router.{ts,tsx}` deleted.
+- **component-based** (centralized): `src/router/{index,guards}/`
+  - `index.tsx` is the single source of truth for every route:
+    `/` (HomePage, public, no guard), `/login` (`GuestGuard`), `/admin`
+    (`AuthGuard`).
+  - `guards/`: `AuthGuard` (same as feat) + `GuestGuard` (bounces
+    authenticated users away from guest-only pages — does **not** block
+    public routes, which carry no guard at all).
+  - No `routes/` directory; the route table is the only place route
+    definitions live (per the "centralized router" principle).
+  - App wraps `<AppRoutes>`. Old `src/routes/index.{ts,tsx}` deleted.
+
+_Tests:_ exhaustive + verify-offline arch-aware router asserts
+(feat needs `RoleGuard` + `routes/{home,auth}.routes`; comp needs
+`GuestGuard` and asserts `src/router/routes/` is absent).
+
+---
+
+### 2026-08-29 — Drop dead provider orphans + feat `shared/` cleanup
+
+`836f877` · `feat(v1.2.x): drop dead provider orphans + feat shared/ cleanup`
+
+- Drop dead `src/context/{app-context,AppContext}.{ts,tsx,js,jsx}` in
+  comp (six files no cell consumed; `AppContext.tsx` was a Provider
+  component living in a `context/` folder).
+- Drop unused `src/config/routes.{ts,js}` (dead `ROUTES` constants;
+  nothing imported them).
+- Drop `templates/architectures/feature-based/src/shared/api/.gitkeep` +
+  `shared/lib/.gitkeep` — under the api-vs-lib exclusivity rule (none →
+  neither, fetch → only `api`, axios → only `lib/axios`), the folders
+  shouldn't ship when neither client is chosen. They only existed as
+  placeholders to survive the architecture copy.
+- Drop `templates/architectures/{feature-based,component-based}/src/{shared/,}styles/globals.css` — these were Vite's defaults that
+  leaked framework-specific content (`@import "tailwindcss";` for feat)
+  before `setupCssFramework` rewrote them. They are reintroduced under
+  the right names in the next entry.
+
+---
+
+### 2026-08-29 — Framework-aware styling + data-router parity (baseline)
+
+`08f70e4` · `feat(v1.2.x): framework-aware styling + data-router parity across architectures`
+
 - **Framework-aware component styling** — the shared look (App shell, home
   page, Button, layout) is expressed per framework: **Tailwind** classes,
-  **Bootstrap** utilities, or **inline styles** for `none`. Base components and
-  the icon overlays (`lucide`, `huge`) all switch markup with the CSS choice
-  instead of hardcoding Tailwind. Variants live in
+  **Bootstrap** utilities, or **inline styles** for `none`. Base components
+  and the icon overlays (`lucide`, `huge`) all switch markup with the CSS
+  choice instead of hardcoding Tailwind. Variants live in
   `templates/css/component-styles/{tailwind,bootstrap}/` plus
-  `tailwind/`/`bootstrap` subfolders of the icon overlays; the root version of
-  each component is the inline (`none`) default.
-- **CSS globals fix (v1.2.0 regression)** — `src/css.js` now writes the chosen
-  framework's stylesheet to the globals file each architecture actually
-  imports (`shared/styles/globals.css` for feature-based,
-  `styles/globals.css` for component-based). The `shared/` move left the path
-  pointing at the old location, so Bootstrap/none never reached the
+  `tailwind/`/`bootstrap` subfolders of the icon overlays; the root version
+  of each component is the inline (`none`) default.
+- **CSS globals fix (v1.2.0 regression)** — `src/css.js` now writes the
+  chosen framework's stylesheet to the globals file each architecture
+  actually imports (`shared/styles/globals.css` for feature-based,
+  `styles/globals.css` for component-based). The `shared/` move left the
+  path pointing at the old location, so Bootstrap/none never reached the
   feature-based stylesheet.
-- **Data-router + `Outlet` parity** — component-based `routes/` migrates from
-  `BrowserRouter`/`Routes` to `createBrowserRouter`/`RouterProvider`, with
-  `MainLayout` as the parent route rendering `<Outlet />`. feature-based gains
-  `shared/layouts/RootLayout` (an `Outlet`-rendering shell) so the app chrome is
-  preserved under the data router instead of being dropped.
-- **Comp housekeeping** — removed the unused `src/components/layout` placeholder
-  (duplicated `src/layouts/`); `components/form` is kept.
+- **Data-router + `Outlet` parity** — component-based `routes/` migrates
+  from `BrowserRouter`/`Routes` to `createBrowserRouter`/`RouterProvider`,
+  with `MainLayout` as the parent route rendering `<Outlet />`.
+  Feature-based gains `shared/layouts/RootLayout` (an `Outlet`-rendering
+  shell) so the app chrome is preserved under the data router instead of
+  being dropped.
+- **Strict folder pruning** — generated `src/` never ships folders the
+  selection doesn't own: a generic post-injection pass removes `.gitkeep`
+  placeholders from directories an overlay populated with real files
+  (e.g. comp `services/.gitkeep`).
+- **Comp housekeeping** — removed the unused `src/components/layout`
+  placeholder (duplicated `src/layouts/`); `components/form` is kept.
 
-### Files touched (repo side)
+---
 
-- `src/css.js`, `src/injector.js` (framework variants), `src/readme.js`.
-- `templates/css/component-styles/**`, `templates/conditional/icons/**`,
-  `templates/conditional/router/**`, `templates/architectures/**`.
-- Harnesses: `verify-offline`/`verify-installed`, `exhaustive`, smoke, install.
+### Earlier v1.2.0 — API layer + feature-based `shared/` housekeeping
+
+`8ec162c`, `be5a709`, `90fc13e`, `d229f8f`, `6e6eda2`, `09da701` (see
+`git log -- v1.2.0`).
+
+- **Axios as `api`** — refactored from a monolithic `axios.ts` into a
+  split layer (`api.config` + `api.client`) and exported end-to-end as
+  `api` (client default export + barrel re-export), not `apiClient`.
+  `user.service` performs real CRUD (`get`/`post`/`put`/`delete`).
+- **Fetch layer parity** — fetch client mirrors the axios layout
+  (`api.config` + `api.client`) with `get`/`post`/`put`/`delete`,
+  configured to intercept `VITE_API_URL`. `user.service` calls the named
+  `api` methods and never calls `fetch()` directly.
+- **Dropped `config/constants`** — both clients inline `VITE_API_URL`;
+  the unused `src/config/constants.*` file is no longer shipped.
+- **Feature-based `shared/` grouping** — reusable resources moved under
+  `src/shared/` (`api`, `components`, `hooks`, `layouts`, `lib`, `stores`,
+  `styles`, `types`, `utils`); the feature tree keeps only `app/`,
+  `features/` and `shared/` at the top level.
+- **api-vs-lib rule** — **fetch** lives in `src/shared/api/` (not an
+  external dependency), **axios** in `src/shared/lib/axios/` (third-party
+  lib init). Folders are strictly mutually exclusive.
+- **Removed unused barrels** — non-consumed barrels deleted; `.gitkeep`
+  placeholders preserve folders that would otherwise disappear.
+- **Public feature barrel** — `features/home/index.ts` re-exports the
+  feature's public surface.
+- **Removed `interfaces/`** — per-feature `interfaces` folder dropped;
+  types live in `shared/types` (global).
+- **Generated `typecheck` script** (`tsc -b`), independent of `build`
+  (which stays `vite build`).
+- **Component-based types parity** — tsconfig strict + `vite/client`
+  types; `useLocalStorage<T>`, redux `PayloadAction`/`RootState`/
+  `AppDispatch`, etc.
+
+---
 
 ### Verification
 
-`npm test` (46 unit + smoke), `verify:offline` (9 stratified cells) and the
-real-install gates (`verify:installed`: lint, format/idempotence, vitest/jest,
-`tsc -b`, `vite build`) stay green; `exhaustive` adds globals/markup parity
-asserts for all framework × architecture combos. Full offline matrix is run
-before release (see `docs/verification/`).
+`npm test` (46 unit + smoke), `verify:offline` (9 stratified cells) and
+the real-install gates (`verify:installed`: lint, format/idempotence,
+vitest/jest, `tsc -b`, `vite build`) stay green. `exhaustive` adds
+markup parity asserts for all framework × architecture combos, plus
+arch-aware router/provider/CSS assertions for the v1.2.x entries above.
+
+The full offline matrix is run before release (see
+`docs/verification/`).
 
 ---
 
