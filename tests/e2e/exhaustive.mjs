@@ -208,6 +208,34 @@ async function check(responses, projectPath) {
         !(await exists(path.join(projectPath, architecture === "component-based" ? "src/services/axios.jsx" : "src/lib/axios.jsx"))),
       "axios: old flat axios file present"
     );
+  } else if (apiClient === "fetch") {
+    const fetchRoutes =
+      architecture === "component-based"
+        ? [
+            `src/config/api.config.${extConfig}`,
+            `src/services/api.client.${extConfig}`,
+            `src/services/user.service.${extConfig}`,
+            `src/services/index.${extConfig}`,
+          ]
+        : [
+            `src/lib/api/api.config.${extConfig}`,
+            `src/lib/api/api.client.${extConfig}`,
+            `src/lib/api/index.${extConfig}`,
+            `src/features/home/services/user.service.${extConfig}`,
+            `src/features/home/services/index.${extConfig}`,
+          ];
+    for (const rel of fetchRoutes) {
+      assert.ok(await exists(path.join(projectPath, rel)), `fetch: ${rel} missing`);
+    }
+    assert.ok(
+      !(await exists(path.join(projectPath, architecture === "component-based" ? "src/services/api.ts" : "src/lib/api.ts"))) &&
+        !(await exists(path.join(projectPath, architecture === "component-based" ? "src/services/api.jsx" : "src/lib/api.jsx"))),
+      "fetch: old monolithic api file present"
+    );
+    if (architecture === "feature-based") {
+      assert.ok(!(await exists(path.join(projectPath, "src/lib/index.ts"))), "fetch: lib/index.ts present");
+      assert.ok(!(await exists(path.join(projectPath, "src/lib/index.js"))), "fetch: lib/index.js present");
+    }
   } else {
     assert.ok(
       !(await exists(path.join(projectPath, "src/config/axios.config.ts"))) &&
@@ -215,6 +243,12 @@ async function check(responses, projectPath) {
       `non-axios: stray config/axios.config (${apiClient})`
     );
     assert.ok(!(await exists(path.join(projectPath, "src/lib/axios"))), `non-axios: stray lib/axios (${apiClient})`);
+    assert.ok(
+      !(await exists(path.join(projectPath, "src/config/api.config.ts"))) &&
+        !(await exists(path.join(projectPath, "src/config/api.config.js"))),
+      `non-fetch: stray config/api.config (${apiClient})`
+    );
+    assert.ok(!(await exists(path.join(projectPath, "src/lib/api"))), `non-fetch: stray lib/api (${apiClient})`);
   }
 
   // config/constants dropped in every scaffold

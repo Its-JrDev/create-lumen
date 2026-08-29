@@ -94,7 +94,7 @@ function buildProjectStructure(architecture) {
 ├── components/   # Shared UI components
 ├── features/     # Feature modules (pages, hooks, api)
 ├── hooks/        # Shared custom hooks
-├── lib/          # Shared library (axios client)
+├── lib/          # Shared library (api client)
 ├── stores/       # Global state stores
 ├── types/        # TypeScript type definitions
 └── utils/        # Utility functions`;

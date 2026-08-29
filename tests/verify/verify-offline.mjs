@@ -85,6 +85,12 @@ const PARITY_FILE_CANDIDATES = [
   "src/lib/axios/api.config.ts", "src/lib/axios/api.config.js",
   "src/lib/axios/api.client.ts", "src/lib/axios/api.client.js",
   "src/features/home/services/user.service.ts", "src/features/home/services/user.service.js",
+  "src/config/api.config.ts", "src/config/api.config.js",
+  "src/services/api.client.ts", "src/services/api.client.js",
+  "src/services/user.service.ts", "src/services/user.service.js",
+  "src/lib/api/api.config.ts", "src/lib/api/api.config.js",
+  "src/lib/api/api.client.ts", "src/lib/api/api.client.js",
+  "src/features/home/services/user.service.ts", "src/features/home/services/user.service.js",
 ];
 
 // Run a tool binary from the vendored toolchain against the project.
@@ -238,6 +244,38 @@ async function audit(responses, projectPath) {
         !(await exists(path.join(projectPath, oldFlat, "axios.jsx"))),
       "old flat axios file present"
     );
+  } else if (apiClient === "fetch") {
+    const fetchRoutes =
+      architecture === "component-based"
+        ? [
+            `src/config/api.config.${extConfig}`,
+            `src/services/api.client.${extConfig}`,
+            `src/services/user.service.${extConfig}`,
+            `src/services/index.${extConfig}`,
+          ]
+        : [
+            `src/lib/api/api.config.${extConfig}`,
+            `src/lib/api/api.client.${extConfig}`,
+            `src/lib/api/index.${extConfig}`,
+            `src/features/home/services/user.service.${extConfig}`,
+            `src/features/home/services/index.${extConfig}`,
+          ];
+    for (const rel of fetchRoutes) {
+      ok(await exists(path.join(projectPath, rel)), `${rel} missing`);
+    }
+    const oldMono = architecture === "component-based" ? "src/services" : "src/lib";
+    ok(
+      !(await exists(path.join(projectPath, oldMono, "api.ts"))) &&
+        !(await exists(path.join(projectPath, oldMono, "api.jsx"))),
+      "old monolithic api file present"
+    );
+    if (architecture === "feature-based") {
+      ok(
+        !(await exists(path.join(projectPath, "src/lib/index.ts"))) &&
+          !(await exists(path.join(projectPath, "src/lib/index.js"))),
+        "lib/index still present"
+      );
+    }
   } else {
     ok(
       !(await exists(path.join(projectPath, "src/config/axios.config.ts"))) &&
@@ -250,6 +288,12 @@ async function audit(responses, projectPath) {
         !(await exists(path.join(projectPath, "src/services/axios.client.js"))),
       `stray services/axios.client (${apiClient})`
     );
+    ok(
+      !(await exists(path.join(projectPath, "src/config/api.config.ts"))) &&
+        !(await exists(path.join(projectPath, "src/config/api.config.js"))),
+      `stray config/api.config (${apiClient})`
+    );
+    ok(!(await exists(path.join(projectPath, "src/lib/api"))), `stray lib/api (${apiClient})`);
   }
   ok(
     !(await exists(path.join(projectPath, "src/config/constants.ts"))) &&
