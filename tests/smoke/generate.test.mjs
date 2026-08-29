@@ -91,8 +91,13 @@ async function check(responses, projectPath) {
   const scripts = pkgJson.scripts || {};
 
   const expect = ["dev", "build", "preview", "lint", "lint:fix", "format", "format:check", "test", "test:run"];
+  if (language === "ts") expect.push("typecheck");
   for (const s of expect) {
     assert.ok(scripts[s], `missing script: ${s}`);
+  }
+
+  if (language === "ts") {
+    assert.strictEqual(scripts.typecheck, "tsc -b", "typecheck script");
   }
 
   assert.ok(await exists(path.join(projectPath, `src/main.${ext}`)), `main.${ext} missing`);

@@ -80,6 +80,10 @@ function buildScripts(responses) {
     rows.push("| `npm run format:check` | Verify code is formatted |");
   }
 
+  if (responses.language === "ts") {
+    rows.push("| `npm run typecheck` | Type-check the project (tsc -b) |");
+  }
+
   return rows.join("\n");
 }
 
@@ -107,6 +111,7 @@ function buildProjectStructure(architecture) {
 ├── services/     # API service layer
 ├── store/        # State store
 ├── styles/       # Global styles
+├── types/        # TypeScript type definitions
 └── utils/        # Utility functions`;
 }
 

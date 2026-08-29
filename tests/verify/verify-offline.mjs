@@ -78,6 +78,7 @@ const PARITY_FILE_CANDIDATES = [
   "vite.config.ts", "vitest.config.ts", "jest.config.ts",
   "eslint.config.ts", "eslint.config.js",
   "src/context/app-context.ts", "src/context/AppContext.tsx",
+  "src/types/index.ts", "src/types/index.js",
 ];
 
 // Run a tool binary from the vendored toolchain against the project.
@@ -201,6 +202,10 @@ async function audit(responses, projectPath) {
   const ok = (cond, msg) => { if (!cond) errors.push(msg); };
 
   ok(await exists(path.join(projectPath, `src/main.${language === "ts" ? "tsx" : "jsx"}`)), "main entry missing");
+  ok(
+    await exists(path.join(projectPath, `src/types/index.${language === "ts" ? "ts" : "js"}`)),
+    `src/types/index.${language === "ts" ? "ts" : "js"} missing`
+  );
 
   if (linter === "eslint") {
     ok(await exists(path.join(projectPath, `eslint.config.${extConfig}`)), "eslint config missing");

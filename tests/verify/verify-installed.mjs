@@ -149,9 +149,15 @@ async function gateCell(responses, projectPath) {
     runP(["npm", "test", "--", "--ci"], "jest --ci");
   }
 
-  // --- Type check (TS only): tsc -b over the generated tsconfig graph ---
+  // --- Type check (TS only): the generated `typecheck` script gates tsc -b
+  //      over the generated tsconfig graph ---
   if (responses.language === "ts") {
-    runP([bin("tsc"), "-b"], "tsc -b (zero errors)");
+    const scriptsJson = JSON.parse(await fsp.readFile(path.join(projectPath, "package.json"), "utf8")).scripts || {};
+    results.push({ label: "typecheck script", ok: scriptsJson.typecheck === "tsc -b", out: scriptsJson.typecheck ? "" : "typecheck script missing" });
+    runP(["npm", "run", "typecheck"], "npm run typecheck (tsc -b)");
+  } else {
+    const scriptsJson = JSON.parse(await fsp.readFile(path.join(projectPath, "package.json"), "utf8")).scripts || {};
+    results.push({ label: "no typecheck script (js)", ok: !scriptsJson.typecheck, out: scriptsJson.typecheck ? "typecheck script present in js" : "" });
   }
 
   // --- Build (vite build; typechecking is gated separately per the generated

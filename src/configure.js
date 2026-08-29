@@ -19,7 +19,7 @@ export async function configureProject(projectPath, language, cssFramework) {
   }
 
   // Add scripts to package.json
-  await configurePackageJson(projectPath);
+  await configurePackageJson(projectPath, language);
 }
 
 async function configureTsconfig(projectPath) {
@@ -154,7 +154,7 @@ async function addPathAliasesToViteConfig(projectPath, ext) {
   }
 }
 
-async function configurePackageJson(projectPath) {
+async function configurePackageJson(projectPath, language) {
   const pkgPath = path.join(projectPath, "package.json");
   try {
     const content = await readFileContent(pkgPath);
@@ -165,6 +165,10 @@ async function configurePackageJson(projectPath) {
     pkg.scripts.dev = "vite";
     pkg.scripts.build = "vite build";
     pkg.scripts.preview = "vite preview";
+
+    if (language === "ts") {
+      pkg.scripts.typecheck = "tsc -b";
+    }
 
     await fsp.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
   } catch {

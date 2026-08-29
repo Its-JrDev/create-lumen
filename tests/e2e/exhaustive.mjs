@@ -176,6 +176,19 @@ async function check(responses, projectPath) {
     assert.ok(js.includes('"@/*"'), "js: @/* path missing");
   }
 
+  // Typecheck script (TS only)
+  if (language === "ts") {
+    assert.strictEqual(scripts.typecheck, "tsc -b", "ts: typecheck script");
+  } else {
+    assert.ok(!scripts.typecheck, "js: typecheck script should be absent");
+  }
+
+  // types/ parity: both architectures ship a src/types/index in the active language
+  assert.ok(
+    await exists(path.join(projectPath, `src/types/index.${language === "ts" ? "ts" : "js"}`)),
+    `types: src/types/index.${language === "ts" ? "ts" : "js"} missing`
+  );
+
   // vite config gets the @ alias for non-tailwind setups
   if (cssFramework !== "tailwind") {
     const vite = await fsp.readFile(path.join(projectPath, `vite.config.${extConfig}`), "utf8");
