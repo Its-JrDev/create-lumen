@@ -155,7 +155,7 @@ src/
 
 ## Roadmap
 
-See `docs/ROADMAP.md` for planned features and upcoming releases.
+Released versions live in [`docs/CHANGELOG.md`](./docs/CHANGELOG.md); planned work is tracked in [`docs/ROADMAP.md`](./docs/ROADMAP.md).
 
 ## Requirements
 
