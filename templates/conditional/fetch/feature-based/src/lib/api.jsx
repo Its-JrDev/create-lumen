@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "@/config/constants";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const apiClient = async (endpoint, options = {}) => {
   const token = localStorage.getItem("access_token");

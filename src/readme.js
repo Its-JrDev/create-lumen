@@ -92,9 +92,9 @@ function buildProjectStructure(architecture) {
     return `src/
 ├── app/          # App shell and providers
 ├── components/   # Shared UI components
-├── config/       # Constants and configuration
 ├── features/     # Feature modules (pages, hooks, api)
 ├── hooks/        # Shared custom hooks
+├── lib/          # Shared library (axios client)
 ├── stores/       # Global state stores
 ├── types/        # TypeScript type definitions
 └── utils/        # Utility functions`;
@@ -102,7 +102,7 @@ function buildProjectStructure(architecture) {
 
   return `src/
 ├── components/   # Reusable UI components (common, form, layout)
-├── config/       # Constants and route definitions
+├── config/       # Route definitions
 ├── context/      # React context providers
 ├── hooks/        # Shared custom hooks
 ├── layouts/      # Page layout wrappers

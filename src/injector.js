@@ -17,9 +17,9 @@ export async function injectArchitecture(projectPath, templatesDir, architecture
     // Skip files that don't match the language
     if (language === "ts" && name.endsWith(".jsx")) return false;
     if (language === "js" && name.endsWith(".tsx")) return false;
-    // Skip .ts files when JS, skip .js when TS (for non-component files)
-    if (language === "ts" && name.endsWith(".js") && !name.endsWith(".config.js")) return false;
-    if (language === "js" && name.endsWith(".ts") && !name.endsWith(".config.ts")) return false;
+    // Skip .ts files when JS, skip .js when TS
+    if (language === "ts" && name.endsWith(".js")) return false;
+    if (language === "js" && name.endsWith(".ts")) return false;
     return true;
   });
 
@@ -215,8 +215,8 @@ async function injectOverlay(projectPath, templatesDir, overlayPath, language) {
     await copyDirRecursive(srcDir, path.join(projectPath, "src"), (name) => {
       if (language === "ts" && name.endsWith(".jsx")) return false;
       if (language === "js" && name.endsWith(".tsx")) return false;
-      if (language === "ts" && name.endsWith(".js") && !name.endsWith(".config.js")) return false;
-      if (language === "js" && name.endsWith(".ts") && !name.endsWith(".config.ts")) return false;
+      if (language === "ts" && name.endsWith(".js")) return false;
+      if (language === "js" && name.endsWith(".ts")) return false;
       return true;
     });
   } catch {

@@ -11,4 +11,10 @@
  * @property {string} message
  * @property {boolean} success
  */
+
+/**
+ * @typedef {Object} CreateUserPayload
+ * @property {string} email
+ * @property {string} name
+ */
 export {};

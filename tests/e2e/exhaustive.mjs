@@ -64,7 +64,7 @@ async function generate(responses, baseApp, projectPath) {
 }
 
 async function check(responses, projectPath) {
-  const { language, architecture, cssFramework, testing, router, stateManagement, linter, formatter } = responses;
+  const { language, architecture, cssFramework, testing, router, stateManagement, linter, formatter, apiClient } = responses;
   const ext = language === "ts" ? "tsx" : "jsx";
   const extConfig = language === "ts" ? "ts" : "js";
   const pkgJson = JSON.parse(await fsp.readFile(path.join(projectPath, "package.json"), "utf8"));
@@ -189,6 +189,38 @@ async function check(responses, projectPath) {
     `types: src/types/index.${language === "ts" ? "ts" : "js"} missing`
   );
 
+  // axios API client layer
+  if (apiClient === "axios") {
+    if (architecture === "component-based") {
+      assert.ok(await exists(path.join(projectPath, `src/config/axios.config.${extConfig}`)), "axios: config/axios.config missing");
+      assert.ok(await exists(path.join(projectPath, `src/services/axios.client.${extConfig}`)), "axios: services/axios.client missing");
+      assert.ok(await exists(path.join(projectPath, `src/services/user.service.${extConfig}`)), "axios: services/user.service missing");
+      assert.ok(await exists(path.join(projectPath, `src/services/index.${extConfig}`)), "axios: services/index missing");
+    } else {
+      assert.ok(await exists(path.join(projectPath, `src/lib/axios/api.config.${extConfig}`)), "axios: lib/axios/api.config missing");
+      assert.ok(await exists(path.join(projectPath, `src/lib/axios/api.client.${extConfig}`)), "axios: lib/axios/api.client missing");
+      assert.ok(await exists(path.join(projectPath, `src/lib/axios/index.${extConfig}`)), "axios: lib/axios/index missing");
+      assert.ok(await exists(path.join(projectPath, `src/features/home/services/user.service.${extConfig}`)), "axios: features/home/services/user.service missing");
+      assert.ok(await exists(path.join(projectPath, `src/features/home/services/index.${extConfig}`)), "axios: features/home/services/index missing");
+    }
+    assert.ok(
+      !(await exists(path.join(projectPath, architecture === "component-based" ? "src/services/axios.ts" : "src/lib/axios.ts"))) &&
+        !(await exists(path.join(projectPath, architecture === "component-based" ? "src/services/axios.jsx" : "src/lib/axios.jsx"))),
+      "axios: old flat axios file present"
+    );
+  } else {
+    assert.ok(
+      !(await exists(path.join(projectPath, "src/config/axios.config.ts"))) &&
+        !(await exists(path.join(projectPath, "src/config/axios.config.js"))),
+      `non-axios: stray config/axios.config (${apiClient})`
+    );
+    assert.ok(!(await exists(path.join(projectPath, "src/lib/axios"))), `non-axios: stray lib/axios (${apiClient})`);
+  }
+
+  // config/constants dropped in every scaffold
+  assert.ok(!(await exists(path.join(projectPath, "src/config/constants.ts"))), "constants: src/config/constants.ts present");
+  assert.ok(!(await exists(path.join(projectPath, "src/config/constants.js"))), "constants: src/config/constants.js present");
+
   // vite config gets the @ alias for non-tailwind setups
   if (cssFramework !== "tailwind") {
     const vite = await fsp.readFile(path.join(projectPath, `vite.config.${extConfig}`), "utf8");
@@ -213,11 +245,16 @@ async function main() {
   for (const lang of axes.language) bases[lang] = await ensureBase(lang);
 
   const limit = process.env.LIMIT ? Number(process.env.LIMIT) : Infinity;
+  const skip = process.env.SKIP ? Number(process.env.SKIP) : 0;
   const failures = [];
   let total = 0;
 
   for (const responses of matrix()) {
-    if (total >= limit) break;
+    if (skip && total < skip) {
+      total++;
+      continue;
+    }
+    if (total - skip >= limit) break;
     total++;
     const projectPath = path.join(os.tmpdir(), `lumen-exh-${total}`);
     try {
@@ -231,7 +268,7 @@ async function main() {
     if (total % 500 === 0) console.log(`  ...${total} generated`);
   }
 
-  console.log(`\nGenerated and checked ${total} configs.`);
+  console.log(`\nGenerated and checked ${total - skip} configs.`);
   if (failures.length) {
     console.log(`FAILURES: ${failures.length}`);
     for (const f of failures.slice(0, 50)) {

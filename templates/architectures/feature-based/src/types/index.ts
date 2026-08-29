@@ -9,3 +9,8 @@ export interface ApiResponse<T> {
   message: string;
   success: boolean;
 }
+
+export interface CreateUserPayload {
+  email: string;
+  name: string;
+}
