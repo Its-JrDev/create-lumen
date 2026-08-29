@@ -87,37 +87,69 @@ function buildScripts(responses) {
   return rows.join("\n");
 }
 
-function buildProjectStructure(architecture) {
-  if (architecture === "feature-based") {
+function buildProjectStructure(responses) {
+  if (responses.architecture === "feature-based") {
+    const shared = [];
+    if (responses.apiClient === "fetch") {
+      shared.push("api/      # HTTP client (fetch) — not an external dependency");
+    } else if (responses.apiClient === "axios") {
+      shared.push("lib/      # Third-party library init (axios client)");
+    }
+    shared.push(
+      "components/ # Shared UI components",
+      "hooks/    # Shared custom hooks",
+      "layouts/  # High-level layout wrappers",
+      "stores/   # Global state stores",
+      `styles/   # ${responses.cssFramework === "none" ? "main.css (reset) + themes.css (CSS variables)" : "globals.css (framework directives) + themes.css"}`,
+      "types/    # Global type definitions",
+      "utils/    # Pure utility functions"
+    );
+    const appChildren = [
+      "App.tsx",
+      "contexts/   # React context objects (createContext)",
+      "providers/  # Provider components (ThemeProvider, ...)",
+      "hooks/      # Hooks that read the contexts (useTheme, ...)"
+    ];
     return `src/
 ├── app/          # App shell and global providers
+${nestedTree(appChildren)}
 ├── features/     # Feature modules (pages, hooks, api, types)
 │   └── home/     # Example feature (components, services, types, store)
 └── shared/       # Reusable, business-agnostic resources
-    ├── api/      # HTTP client (fetch) — not an external dependency
-    ├── components/ # Shared UI components
-    ├── hooks/    # Shared custom hooks
-    ├── layouts/  # High-level layout wrappers
-    ├── lib/      # Third-party library init (axios client)
-    ├── stores/   # Global state stores
-    ├── styles/   # Global styles
-    ├── types/    # Global type definitions
-    └── utils/    # Pure utility functions`;
+${nestedTree(shared)}`;
   }
 
+  const rows = ["components/   # Reusable UI components (common, form)"];
+  if (responses.apiClient !== "none") {
+    rows.push("config/       # API configuration (axios/fetch)");
+  }
+  rows.push(
+    "hooks/        # Shared custom hooks",
+    "layouts/      # Page layout wrappers",
+    "pages/        # Page-level components",
+    "providers/    # Provider components (createContext in appcontext.{ts,js}, Provider in AppProvider.{tsx,jsx})"
+  );
+  if (responses.router) {
+    rows.push("router/       # Centralized data router (guards/, index)");
+  }
+  rows.push(
+    "services/     # API service layer",
+    "store/        # State store",
+    `styles/       # ${responses.cssFramework === "none" ? "main.css (reset) + themes.css (CSS variables)" : "globals.css (framework directives) + themes.css"}`,
+    "types/        # TypeScript type definitions",
+    "utils/        # Utility functions"
+  );
   return `src/
-├── components/   # Reusable UI components (common, form)
-├── config/       # Route definitions
-├── context/      # React context providers
-├── hooks/        # Shared custom hooks
-├── layouts/      # Page layout wrappers
-├── pages/        # Page-level components
-├── routes/       # Route definitions
-├── services/     # API service layer
-├── store/        # State store
-├── styles/       # Global styles
-├── types/        # TypeScript type definitions
-└── utils/        # Utility functions`;
+${nestedTree(rows, "")}`;
+}
+
+function nestedTree(rows, indent = "    ") {
+  return rows
+    .map((label, i) => {
+      const isLast = i === rows.length - 1;
+      return `${indent}${isLast ? "└── " : "├── "}${label}`;
+    })
+    .join("\n");
 }
 
 function buildLicense() {
@@ -163,7 +195,7 @@ function buildDescription(projectName, responses) {
 function buildReadme(projectName, responses) {
   const builtWith = buildBuiltWith(responses);
   const scripts = buildScripts(responses);
-  const structure = buildProjectStructure(responses.architecture);
+  const structure = buildProjectStructure(responses);
 
   return `${buildDescription(projectName, responses)}
 

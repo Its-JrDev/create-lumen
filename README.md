@@ -89,9 +89,16 @@ Feature-based (example):
 src/
 ├── app               # App shell and global providers
 │   ├── App.tsx
+│   ├── contexts
+│   │   └── themecontext.ts   # createContext + ThemeContextValue
 │   ├── providers
-│   │   └── ThemeProvider.tsx
-│   └── router.tsx
+│   │   └── ThemeProvider.tsx # Provider component
+│   ├── hooks
+│   │   └── useTheme.ts       # Hook that reads ThemeContext
+│   └── router        # Data router (per feature area)
+│       ├── guards    # AuthGuard, RoleGuard
+│       ├── routes    # home.routes, auth.routes
+│       └── index.tsx # createBrowserRouter init
 ├── features           # Feature modules (business logic owned per feature)
 │   └── home
 │       ├── components
@@ -103,15 +110,15 @@ src/
 │       ├── store
 │       └── types
 └── shared             # Reusable, business-agnostic resources
-    ├── api            # HTTP client (fetch) — not an external dependency
+    ├── api/lib        # fetch client → api/; axios init → lib/axios/ (per choice)
     ├── components
     │   └── ui
     ├── hooks
     ├── layouts
-    ├── lib            # Third-party library init (e.g. axios client)
     ├── stores
     ├── styles
-    │   └── globals.css
+    │   ├── globals.css      # Tailwind/Bootstrap directives (or main.css for vanilla)
+    │   └── themes.css       # Theme tokens (Tailwind @theme / Bootstrap data-bs-theme / CSS vars)
     ├── types
     └── utils
 ```
@@ -124,19 +131,24 @@ src/
 ├── components
 │   ├── common
 │   └── form
-├── config
-│   ├── constants.ts
-│   └── routes.ts
-├── context
+├── config             # API config (when an axios/fetch client is chosen)
 ├── hooks
-├── index.css
 ├── layouts
 ├── main.tsx
 ├── pages
-├── routes
+├── providers          # Provider components (createContext + Provider in separate files inside providers/)
+│   ├── appcontext.ts      # createContext + AppContextValue
+│   └── AppProvider.tsx    # Provider component
+├── hooks
+│   └── useApp.ts           # Hook that reads AppContext
+├── router             # Centralized data router
+│   ├── guards         # AuthGuard, GuestGuard
+│   └── index.tsx      # Single source of truth for all routes
 ├── services
 ├── store
 ├── styles
+│   ├── globals.css      # Tailwind/Bootstrap directives (or main.css for vanilla)
+│   └── themes.css       # Theme tokens (Tailwind @theme / Bootstrap data-bs-theme / CSS vars)
 ├── test
 └── utils
 ```
