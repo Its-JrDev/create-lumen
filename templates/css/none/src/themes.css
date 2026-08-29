@@ -1,0 +1,19 @@
+/* themes.css — vanilla CSS theme tokens
+ * Driven by the ThemeProvider (feat) / AppProvider (comp) via
+ * document.documentElement.dataset.theme.
+ */
+:root {
+  --color-bg: #ffffff;
+  --color-fg: #111827;
+  --color-muted: #6b7280;
+  --color-primary: #6366f1;
+  --color-border: #e5e7eb;
+}
+
+:root[data-theme="dark"] {
+  --color-bg: #111827;
+  --color-fg: #f9fafb;
+  --color-muted: #9ca3af;
+  --color-primary: #818cf8;
+  --color-border: #374151;
+}

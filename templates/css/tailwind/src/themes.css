@@ -1,0 +1,9 @@
+/* themes.css — Tailwind v4 theme tokens
+ * Synced with ThemeProvider / AppProvider via
+ * document.documentElement.dataset.theme.
+ */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  --color-primary: #6366f1;
+}

@@ -1,0 +1,14 @@
+/* themes.css — Bootstrap 5.3+ theme overrides
+ * Bootstrap 5.3+ reads data-bs-theme on a parent element to switch between
+ * light/dark variants. The themes here customize the default tokens; the
+ * data-bs-theme attribute is applied externally.
+ */
+:root[data-bs-theme="light"] {
+  --bs-primary: #6366f1;
+}
+
+:root[data-bs-theme="dark"] {
+  --bs-body-bg: #111827;
+  --bs-body-color: #f9fafb;
+  --bs-primary: #818cf8;
+}
