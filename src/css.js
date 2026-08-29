@@ -8,16 +8,20 @@ export async function setupCssFramework({
   templatesDir,
   language,
   cssFramework,
+  architecture,
   ext,
   pkg,
 }) {
   process.chdir(projectPath);
   const cssDir = path.join(templatesDir, "css");
   const indexCssPath = path.join(projectPath, "src", "index.css");
-  // Feature-based main.* imports ./styles/globals.css; component-based main.*
-  // imports ./index.css. The chosen framework's styles must land in the file
-  // the architecture actually imports.
-  const globalsCssPath = path.join(projectPath, "src", "styles", "globals.css");
+  // Feature-based main.* imports ./shared/styles/globals.css; component-based
+  // imports ./styles/globals.css. The chosen framework's styles must land in
+  // the file the architecture actually imports.
+  const globalsCssPath =
+    architecture === "feature-based"
+      ? path.join(projectPath, "src", "shared", "styles", "globals.css")
+      : path.join(projectPath, "src", "styles", "globals.css");
 
   async function writeCss(content) {
     await fsp.writeFile(indexCssPath, content, "utf8");

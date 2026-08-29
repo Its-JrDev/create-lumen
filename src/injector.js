@@ -2,7 +2,25 @@ import { promises as fsp } from "fs";
 import path from "path";
 import { copyDirRecursive, writeFileRecursive } from "@/utils/fs.js";
 
-export async function injectArchitecture(projectPath, templatesDir, architecture, language) {
+// Narrow a template tree copy to the selected language: .tsx/.ts for ts,
+// .jsx/.js for js (keeps the opposite language's files out of the project).
+function langFileFilter(language) {
+  return (name) => {
+    if (language === "ts") {
+      if (name.endsWith(".jsx")) return false;
+      if (name.endsWith(".js")) return false;
+      return true;
+    }
+    if (language === "js") {
+      if (name.endsWith(".tsx")) return false;
+      if (name.endsWith(".ts")) return false;
+      return true;
+    }
+    return true;
+  };
+}
+
+export async function injectArchitecture(projectPath, templatesDir, architecture, language, cssFramework) {
   const ext = language === "ts" ? "tsx" : "jsx";
   const srcDir = path.join(templatesDir, "architectures", architecture, "src");
 
@@ -13,15 +31,7 @@ export async function injectArchitecture(projectPath, templatesDir, architecture
   try { await fsp.rm(defaultAppJsx, { force: true }); } catch {}
 
   // Copy the architecture tree into the project's src/
-  await copyDirRecursive(srcDir, path.join(projectPath, "src"), (name) => {
-    // Skip files that don't match the language
-    if (language === "ts" && name.endsWith(".jsx")) return false;
-    if (language === "js" && name.endsWith(".tsx")) return false;
-    // Skip .ts files when JS, skip .js when TS
-    if (language === "ts" && name.endsWith(".js")) return false;
-    if (language === "js" && name.endsWith(".ts")) return false;
-    return true;
-  });
+  await copyDirRecursive(srcDir, path.join(projectPath, "src"), langFileFilter(language));
 
   // Copy the architecture's main.tsx/main.jsx to src/main.{ext}
   const mainSrc = path.join(
@@ -41,6 +51,31 @@ export async function injectArchitecture(projectPath, templatesDir, architecture
   const oppositeExt = language === "ts" ? "jsx" : "tsx";
   const oppositeMain = path.join(projectPath, "src", `main.${oppositeExt}`);
   try { await fsp.rm(oppositeMain, { force: true }); } catch {}
+
+  // Apply the chosen CSS framework's component styling on top of the base
+  // (only where the base ships framework-agnostic inline markup). Runs here,
+  // before conditional overlays, so icons/router can still override the files
+  // they own.
+  if (cssFramework === "tailwind" || cssFramework === "bootstrap") {
+    const variantSrc = path.join(
+      templatesDir,
+      "css",
+      "component-styles",
+      cssFramework,
+      architecture,
+      "src"
+    );
+    try {
+      await fsp.access(variantSrc);
+      await copyDirRecursive(
+        variantSrc,
+        path.join(projectPath, "src"),
+        langFileFilter(language)
+      );
+    } catch {
+      // no component-styles for this arch/framework
+    }
+  }
 }
 
 export async function injectFormatter(projectPath, templatesDir, responses) {
@@ -153,20 +188,22 @@ export async function injectConditionals(projectPath, templatesDir, responses, a
 
   // 2. Router (overwrites App.tsx with routed version)
   if (responses.router) {
-    await injectOverlay(
+    await injectOverlayVariant(
       projectPath,
       templatesDir,
-      `conditional/router/${architecture}`,
+      `router/${architecture}`,
+      responses.cssFramework,
       language
     );
   }
 
   // 3. Icons (overwrites home page)
   if (responses.iconLibrary && responses.iconLibrary !== "none") {
-    await injectOverlay(
+    await injectOverlayVariant(
       projectPath,
       templatesDir,
-      `conditional/icons/${responses.iconLibrary}/${architecture}`,
+      `icons/${responses.iconLibrary}/${architecture}`,
+      responses.cssFramework,
       language
     );
   }
@@ -208,17 +245,38 @@ export async function injectConditionals(projectPath, templatesDir, responses, a
   }
 }
 
+// Overlays that ship presentational components (router, icons) carry optional
+// tailwind/bootstrap subfolders. Copy the root version first — it holds the
+// framework-agnostic skeleton (routed App, route tables) plus the inline
+// markup defaults used for cssFramework "none" — then overlay the framework's
+// subfolder so its markup-specific files (transitive layouts, home pages)
+// win; `copyDirRecursive` overwrites on name collision.
+async function injectOverlayVariant(projectPath, templatesDir, rel, cssFramework, language) {
+  const base = `conditional/${rel}`;
+  await injectOverlay(projectPath, templatesDir, base, language);
+  const variant =
+    cssFramework === "tailwind" || cssFramework === "bootstrap"
+      ? cssFramework
+      : "";
+  if (variant) {
+    await injectOverlay(
+      projectPath,
+      templatesDir,
+      `${base}/${variant}`,
+      language
+    );
+  }
+}
+
 async function injectOverlay(projectPath, templatesDir, overlayPath, language) {
   const srcDir = path.join(templatesDir, overlayPath, "src");
   try {
     await fsp.access(srcDir);
-    await copyDirRecursive(srcDir, path.join(projectPath, "src"), (name) => {
-      if (language === "ts" && name.endsWith(".jsx")) return false;
-      if (language === "js" && name.endsWith(".tsx")) return false;
-      if (language === "ts" && name.endsWith(".js")) return false;
-      if (language === "js" && name.endsWith(".ts")) return false;
-      return true;
-    });
+    await copyDirRecursive(
+      srcDir,
+      path.join(projectPath, "src"),
+      langFileFilter(language)
+    );
   } catch {
     // overlay src dir doesn't exist
   }

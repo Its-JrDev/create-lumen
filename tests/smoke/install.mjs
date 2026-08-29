@@ -54,7 +54,7 @@ async function generate(responses, projectPath) {
 
   await runViteCreate(projectPath, responses.projectName, pkg, responses.language);
   await runBaseInstall(projectPath, pkg);
-  await injectArchitecture(projectPath, TEMPLATES_DIR, responses.architecture, responses.language);
+  await injectArchitecture(projectPath, TEMPLATES_DIR, responses.architecture, responses.language, responses.cssFramework);
   await injectConditionals(projectPath, TEMPLATES_DIR, responses, responses.architecture, responses.language);
   await injectFormatter(projectPath, TEMPLATES_DIR, responses);
   await installAllDeps(responses, pkg, projectPath);
@@ -63,6 +63,7 @@ async function generate(responses, projectPath) {
     templatesDir: TEMPLATES_DIR,
     language: responses.language,
     cssFramework: responses.cssFramework,
+    architecture: responses.architecture,
     ext: responses.language === "ts" ? "tsx" : "jsx",
     pkg,
   });

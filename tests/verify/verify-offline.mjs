@@ -46,7 +46,7 @@ async function generate(responses, baseApp, projectPath) {
   await fsp.mkdir(projectPath, { recursive: true });
   execSync(`rsync -a --delete "${baseApp}/" "${projectPath}/"`);
 
-  await injectArchitecture(projectPath, TEMPLATES_DIR, responses.architecture, responses.language);
+  await injectArchitecture(projectPath, TEMPLATES_DIR, responses.architecture, responses.language, responses.cssFramework);
   await injectConditionals(projectPath, TEMPLATES_DIR, responses, responses.architecture, responses.language);
   await injectFormatter(projectPath, TEMPLATES_DIR, responses);
   await setupCssFramework({
@@ -54,6 +54,7 @@ async function generate(responses, baseApp, projectPath) {
     templatesDir: TEMPLATES_DIR,
     language: responses.language,
     cssFramework: responses.cssFramework,
+    architecture: responses.architecture,
     ext: responses.language === "ts" ? "tsx" : "jsx",
     pkg,
   });
@@ -359,6 +360,42 @@ async function audit(responses, projectPath) {
   if (cssFramework !== "tailwind") {
     const vite = await fsp.readFile(path.join(projectPath, `vite.config.${extConfig}`), "utf8");
     ok(/(?:["'])@(?:["'])/.test(vite) || vite.includes("find: @"), "vite @ alias missing");
+  }
+
+  // CSS framework parity (regression gate for the v1.2.0 globals path fix):
+  // the global stylesheet the architecture actually imports must carry the
+  // selected framework's content, and presentational components must be
+  // expressed in that framework's markup rather than a stale Tailwind look.
+  const globalsRel =
+    architecture === "feature-based"
+      ? "src/shared/styles/globals.css"
+      : "src/styles/globals.css";
+  if (await exists(path.join(projectPath, globalsRel))) {
+    const globals = await fsp.readFile(path.join(projectPath, globalsRel), "utf8");
+    if (cssFramework === "tailwind") {
+      ok(/@import[^;]*tailwindcss/.test(globals), "globals: tailwind import missing");
+    } else if (cssFramework === "none") {
+      ok(globals.includes("box-sizing"), "globals: reset missing (cssFramework none)");
+    }
+  }
+  const homeRel =
+    architecture === "feature-based"
+      ? `src/features/home/pages/HomePage.${language === "ts" ? "tsx" : "jsx"}`
+      : `src/pages/Home/Home.${language === "ts" ? "tsx" : "jsx"}`;
+  if (await exists(path.join(projectPath, homeRel))) {
+    const home = await fsp.readFile(path.join(projectPath, homeRel), "utf8");
+    const hasTailwind = /text-(?:gray|blue|yellow|4xl|xl)|bg-gray-|w-8 h-8/.test(home);
+    const hasBootstrap = /text-muted|d-flex|fw-bold|btn-primary/.test(home);
+    if (cssFramework === "tailwind") {
+      ok(hasTailwind && !hasBootstrap, `home: tailwind markup expected under tailwind`);
+    } else if (cssFramework === "bootstrap") {
+      ok(hasBootstrap && !hasTailwind, `home: bootstrap markup expected under bootstrap`);
+    } else {
+      ok(!hasTailwind && !hasBootstrap, `home: inline markup expected under none`);
+    }
+  }
+  if (architecture === "component-based") {
+    ok(!(await exists(path.join(projectPath, "src/components/layout"))), "components/layout still present");
   }
   return errors;
 }

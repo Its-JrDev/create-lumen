@@ -44,7 +44,7 @@ async function generate(responses, baseApp, projectPath) {
   await fsp.mkdir(projectPath, { recursive: true });
   execSync(`rsync -a --delete "${baseApp}/" "${projectPath}/"`);
 
-  await injectArchitecture(projectPath, TEMPLATES_DIR, responses.architecture, responses.language);
+  await injectArchitecture(projectPath, TEMPLATES_DIR, responses.architecture, responses.language, responses.cssFramework);
   await injectConditionals(projectPath, TEMPLATES_DIR, responses, responses.architecture, responses.language);
   await injectFormatter(projectPath, TEMPLATES_DIR, responses);
   await setupCssFramework({
@@ -52,6 +52,7 @@ async function generate(responses, baseApp, projectPath) {
     templatesDir: TEMPLATES_DIR,
     language: responses.language,
     cssFramework: responses.cssFramework,
+    architecture: responses.architecture,
     ext: responses.language === "ts" ? "tsx" : "jsx",
     pkg,
   });
@@ -268,6 +269,37 @@ async function check(responses, projectPath) {
   if (cssFramework !== "tailwind") {
     const vite = await fsp.readFile(path.join(projectPath, `vite.config.${extConfig}`), "utf8");
     assert.ok(/(?:["'])@(?:["'])/.test(vite) || vite.includes("find: @"), "vite: @ alias missing");
+  }
+
+  // CSS framework markup parity: every architecture expresses the shared look
+  // in the chosen framework's idiom (tailwind classes / bootstrap utilities /
+  // inline styles), and the imported globals carry that framework's content.
+  const globalsRel =
+    architecture === "feature-based"
+      ? "src/shared/styles/globals.css"
+      : "src/styles/globals.css";
+  const globals = await fsp.readFile(path.join(projectPath, globalsRel), "utf8");
+  if (cssFramework === "tailwind") {
+    assert.ok(/@import[^;]*tailwindcss/.test(globals), "globals: tailwind import missing");
+  } else if (cssFramework === "none") {
+    assert.ok(globals.includes("box-sizing"), "globals: reset missing (cssFramework none)");
+  }
+  const homeRel =
+    architecture === "feature-based"
+      ? `src/features/home/pages/HomePage.${ext}`
+      : `src/pages/Home/Home.${ext}`;
+  const home = await fsp.readFile(path.join(projectPath, homeRel), "utf8");
+  const hasTailwind = /text-(?:gray|blue|yellow|4xl|xl)|bg-gray-|w-8 h-8/.test(home);
+  const hasBootstrap = /text-muted|d-flex|fw-bold|btn-primary/.test(home);
+  if (cssFramework === "tailwind") {
+    assert.ok(hasTailwind && !hasBootstrap, "home: tailwind markup expected under tailwind");
+  } else if (cssFramework === "bootstrap") {
+    assert.ok(hasBootstrap && !hasTailwind, "home: bootstrap markup expected under bootstrap");
+  } else {
+    assert.ok(!hasTailwind && !hasBootstrap, "home: inline markup expected under none");
+  }
+  if (architecture === "component-based") {
+    assert.ok(!(await exists(path.join(projectPath, "src/components/layout"))), "components/layout still present");
   }
 
   // README

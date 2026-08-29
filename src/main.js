@@ -111,7 +111,8 @@ export async function main(options = {}) {
       projectPath,
       TEMPLATES_DIR,
       responses.architecture,
-      responses.language
+      responses.language,
+      responses.cssFramework
     );
     archSpin.stop(chalk.green("Architecture scaffolding complete."));
   } catch (err) {
@@ -175,6 +176,7 @@ export async function main(options = {}) {
       templatesDir: TEMPLATES_DIR,
       language: responses.language,
       cssFramework: responses.cssFramework,
+      architecture: responses.architecture,
       ext: responses.language === "ts" ? "tsx" : "jsx",
       pkg,
     });

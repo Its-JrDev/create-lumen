@@ -123,8 +123,7 @@ src/
 ├── App.tsx
 ├── components
 │   ├── common
-│   ├── form
-│   └── layout
+│   └── form
 ├── config
 │   ├── constants.ts
 │   └── routes.ts

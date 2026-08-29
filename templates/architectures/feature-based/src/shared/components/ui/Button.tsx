@@ -9,15 +9,22 @@ export function Button({
   className,
   ...props
 }: ButtonProps) {
-  const base = "px-4 py-2 rounded-lg font-medium transition-colors";
-  const variants = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700",
-    secondary: "bg-gray-200 text-gray-800 hover:bg-gray-300",
+  const styles = {
+    primary: { backgroundColor: "#2563eb", color: "white" },
+    secondary: { backgroundColor: "#e5e7eb", color: "#1f2937" },
   };
 
   return (
     <button
-      className={`${base} ${variants[variant]} ${className ?? ""}`}
+      style={{
+        padding: "8px 16px",
+        borderRadius: "8px",
+        fontWeight: 500,
+        border: "none",
+        cursor: "pointer",
+        ...styles[variant],
+      }}
+      className={className}
       {...props}
     >
       {children}

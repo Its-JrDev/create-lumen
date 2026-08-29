@@ -106,7 +106,7 @@ function buildProjectStructure(architecture) {
   }
 
   return `src/
-├── components/   # Reusable UI components (common, form, layout)
+├── components/   # Reusable UI components (common, form)
 ├── config/       # Route definitions
 ├── context/      # React context providers
 ├── hooks/        # Shared custom hooks

@@ -141,11 +141,11 @@ consistency and developer experience by scaffolding the formatter config and
 
 ---
 
-## 📦 Version 1.2.0 (Released) — API client layer + feature-based `shared/` housekeeping
+## 🚧 Version 1.2.x (Unreleased) — API layer + feature-based `shared/` + framework-aware styling + data-router parity
 
-Rework of the data-fetching layer and the feature-based architecture layout so
-the generated scaffolds ship a clear, dependency-honest structure and a named
-`api` client.
+Two rework threads land together in the next release: the data-fetching layer
+and feature-based `shared/` housekeeping (the old 1.2.0 plan), and the
+framework-driven styling + router-parity pass built on top of it.
 
 ### What shipped
 
@@ -165,8 +165,7 @@ the generated scaffolds ship a clear, dependency-honest structure and a named
   and `shared/` at the top level.
 - **api-vs-lib rule** — the **fetch** client lives in `src/shared/api/` (not an
   external dependency) while the **axios** client lives in `src/shared/lib/axios/`
-  (third-party lib init). Subfolders lean on a barrel for the named `api`
-  export.
+  (third-party lib init). Subfolders lean on a barrel for the named `api` export.
 - **Removed unused barrels** — non-consumed barrel files (comp
   `layouts/hooks/utils/services` indexes, feat `home/services` index) are
   deleted while the real files (`MainLayout`, `useLocalStorage`, `cn`) are kept;
@@ -177,12 +176,42 @@ the generated scaffolds ship a clear, dependency-honest structure and a named
   types live in `shared/types` (global) with a per-feature `types/` placeholder.
 - Generated projects ship a `typecheck` script (`tsc -b`), independent of
   `build` (which stays `vite build`).
+- **Framework-aware component styling** — the shared look (App shell, home
+  page, Button, layout) is expressed per framework: **Tailwind** classes,
+  **Bootstrap** utilities, or **inline styles** for `none`. Base components and
+  the icon overlays (`lucide`, `huge`) all switch markup with the CSS choice
+  instead of hardcoding Tailwind. Variants live in
+  `templates/css/component-styles/{tailwind,bootstrap}/` plus
+  `tailwind/`/`bootstrap` subfolders of the icon overlays; the root version of
+  each component is the inline (`none`) default.
+- **CSS globals fix (v1.2.0 regression)** — `src/css.js` now writes the chosen
+  framework's stylesheet to the globals file each architecture actually
+  imports (`shared/styles/globals.css` for feature-based,
+  `styles/globals.css` for component-based). The `shared/` move left the path
+  pointing at the old location, so Bootstrap/none never reached the
+  feature-based stylesheet.
+- **Data-router + `Outlet` parity** — component-based `routes/` migrates from
+  `BrowserRouter`/`Routes` to `createBrowserRouter`/`RouterProvider`, with
+  `MainLayout` as the parent route rendering `<Outlet />`. feature-based gains
+  `shared/layouts/RootLayout` (an `Outlet`-rendering shell) so the app chrome is
+  preserved under the data router instead of being dropped.
+- **Comp housekeeping** — removed the unused `src/components/layout` placeholder
+  (duplicated `src/layouts/`); `components/form` is kept.
+
+### Files touched (repo side)
+
+- `src/css.js`, `src/injector.js` (framework variants), `src/readme.js`.
+- `templates/css/component-styles/**`, `templates/conditional/icons/**`,
+  `templates/conditional/router/**`, `templates/architectures/**`.
+- Harnesses: `verify-offline`/`verify-installed`, `exhaustive`, smoke, install.
 
 ### Verification
 
 `npm test` (46 unit + smoke), `verify:offline` (9 stratified cells) and the
-4-variant `tsc`/build surface. Full offline matrix and real-install gates are
-run before release (see `docs/verification/`).
+real-install gates (`verify:installed`: lint, format/idempotence, vitest/jest,
+`tsc -b`, `vite build`) stay green; `exhaustive` adds globals/markup parity
+asserts for all framework × architecture combos. Full offline matrix is run
+before release (see `docs/verification/`).
 
 ---
 
