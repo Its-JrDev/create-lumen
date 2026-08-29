@@ -1,1 +1,1 @@
-export { default as apiClient } from "./api.client";
+export { default as api } from "./api.client";

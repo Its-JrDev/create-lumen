@@ -82,6 +82,23 @@ for (const { architecture, language } of COMBOS) {
       assert.ok(!(await exists(path.join(dir, rel))), `old flat axios file still present: ${rel}`);
     }
 
+    // The client is named api end to end (client export + barrel re-export).
+    const clientRel =
+      architecture === "component-based"
+        ? `src/services/axios.client.${ext}`
+        : `src/lib/axios/api.client.${ext}`;
+    const barrelRel =
+      architecture === "component-based"
+        ? `src/services/index.${ext}`
+        : `src/lib/axios/index.${ext}`;
+    const client = await fsp.readFile(path.join(dir, clientRel), "utf8");
+    assert.match(client, /const api = axios\.create\(/, "axios client is not named api");
+    assert.match(client, /export default api;/, "axios client not default-exported as api");
+    assert.doesNotMatch(client, /apiClient/, "apiClient leaked into axios client");
+    const barrel = await fsp.readFile(path.join(dir, barrelRel), "utf8");
+    assert.match(barrel, /export \{ default as api \} from "\.\/(axios\.client|api\.client)";/, "axios barrel does not re-export api");
+    assert.doesNotMatch(barrel, /apiClient/, "apiClient leaked into axios barrel");
+
     await fsp.rm(dir, { recursive: true, force: true });
   });
 
@@ -96,10 +113,11 @@ for (const { architecture, language } of COMBOS) {
 
     assert.match(service, /@\/types/, "user.service does not reference @/types");
     if (architecture === "component-based") {
-      assert.match(service, /@\/services\/axios\.client/, "comp user.service missing client import");
+      assert.match(service, /import api from "@\/services\/axios\.client";/, "comp user.service missing api import");
     } else {
-      assert.match(service, /@\/lib\/axios/, "feat user.service missing client import");
+      assert.match(service, /import \{ api \} from "@\/lib\/axios";/, "feat user.service missing api import");
     }
+    assert.doesNotMatch(service, /apiClient/, "apiClient leaked into user.service");
 
     await fsp.rm(dir, { recursive: true, force: true });
   });
