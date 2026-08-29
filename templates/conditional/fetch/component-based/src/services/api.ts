@@ -1,6 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-const apiClient = async (endpoint: string, options: RequestInit = {}) => {
+const api = async (endpoint: string, options: RequestInit = {}) => {
   const token = localStorage.getItem("access_token");
 
   const headers: HeadersInit = {
@@ -24,4 +24,4 @@ const apiClient = async (endpoint: string, options: RequestInit = {}) => {
   return response.json();
 };
 
-export default apiClient;
+export default api;

@@ -58,6 +58,13 @@ async function scaffold(architecture, language) {
   return dir;
 }
 
+async function scaffoldFetch(architecture, language) {
+  const dir = await fsp.mkdtemp(path.join(os.tmpdir(), "lumen-api-client-fetch-"));
+  await injectArchitecture(dir, TEMPLATES_DIR, architecture, language);
+  await injectConditionals(dir, TEMPLATES_DIR, { ...AXIOS_RESPONSES, apiClient: "fetch" }, architecture, language);
+  return dir;
+}
+
 for (const { architecture, language } of COMBOS) {
   test(`axios layer: ${architecture}/${language} ships config/client/user.service in the agreed layout`, async () => {
     const dir = await scaffold(architecture, language);
@@ -145,6 +152,31 @@ for (const { architecture, language } of COMBOS) {
         `src/config/${name} still present`
       );
     }
+    await fsp.rm(dir, { recursive: true, force: true });
+  });
+
+  test(`fetch layer: ${architecture}/${language} exports the wrapper as api (no apiClient)`, async () => {
+    const dir = await scaffoldFetch(architecture, language);
+    const apiFile = language === "ts" ? "api.ts" : "api.jsx";
+    const indexFile = language === "ts" ? "index.ts" : "index.js";
+    const serviceRel =
+      architecture === "component-based"
+        ? `src/services/${apiFile}`
+        : `src/lib/${apiFile}`;
+    const indexRel =
+      architecture === "component-based"
+        ? `src/services/${indexFile}`
+        : `src/lib/${indexFile}`;
+
+    const api = await fsp.readFile(path.join(dir, serviceRel), "utf8");
+    assert.match(api, /const api = async/, "fetch wrapper is not named api");
+    assert.match(api, /export default api;/, "fetch wrapper is not default-exported as api");
+    assert.doesNotMatch(api, /apiClient/, "apiClient leaked into fetch wrapper");
+
+    const barrel = await fsp.readFile(path.join(dir, indexRel), "utf8");
+    assert.match(barrel, /export \{ default as api \} from "\.\/api";/, "fetch barrel does not re-export api");
+    assert.doesNotMatch(barrel, /apiClient/, "apiClient leaked into fetch barrel");
+
     await fsp.rm(dir, { recursive: true, force: true });
   });
 }
