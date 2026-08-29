@@ -149,6 +149,37 @@ reference.
 
 ---
 
+### 2026-08-29 — Catch-up README + readme.js + leftover file deletes (chore)
+
+`4975780` · `chore: catch-up README + error-resolution-matrix + readme.js + folder deletes from commits 1-4`
+
+Working-tree changes from commits `836f877` / `c7e729a` / `a952a74` /
+`6f6e46c` that did not get staged together with their commit (the
+per-commit `git add` excluded them to keep each commit narrow).
+Grouped into a single follow-up to keep the history readable.
+
+- README.md feat tree shows `app/{contexts,providers,hooks}`; router/
+  replaced `router.tsx` with the per-area layout. comp tree shows
+  `providers/{appcontext,AppProvider}` + `hooks/useApp` + `themes.css`;
+  `src/index.css` removed.
+- `docs/verification/error-resolution-matrix.md` react-refresh row
+  rewritten to reference the actual split (feat
+  `contexts/providers/hooks`; comp `providers/appcontext/AppProvider`
+  + `hooks/useApp`).
+- `src/readme.js` `styles/` row is now selection-aware (`main.css
+  (reset) + themes.css (CSS variables)` for `none`; `globals.css
+  (framework directives) + themes.css` otherwise).
+- Added the three `.gitkeep` placeholders that the architecture copy
+  needs to keep `styles/` + `config/` folders alive until
+  `setupCssFramework` populates them
+  (`templates/architectures/component-based/src/{config,styles}/.gitkeep`
+  + `templates/architectures/feature-based/src/shared/styles/.gitkeep`).
+- Deleted stale files whose replacements live in different paths:
+  old per-area router files, comp redux `StoreProvider` in
+  `context/`, and Vite-default `index.css` per framework.
+
+---
+
 ### 2026-08-29 — CSS framework naming: `main.css` for vanilla, `globals.css` for tailwind/bootstrap + `themes.css` everywhere
 
 `6f6e46c` · `feat(v1.2.x): CSS framework naming — main.css for vanilla, globals.css for tailwind/bootstrap + themes.css`
