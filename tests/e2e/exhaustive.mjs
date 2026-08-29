@@ -117,18 +117,64 @@ async function check(responses, projectPath) {
     const providerPath =
       architecture === "feature-based"
         ? path.join(projectPath, `src/app/providers/StoreProvider.${ext}`)
-        : path.join(projectPath, `src/context/StoreProvider.${ext}`);
+        : path.join(projectPath, `src/providers/StoreProvider.${ext}`);
     assert.ok(await exists(providerPath), "redux: StoreProvider file missing");
+    assert.ok(
+      !(await exists(path.join(projectPath, "src/context"))),
+      "redux comp: legacy src/context/ should not exist"
+    );
   } else {
     assert.ok(!main.includes("StoreProvider"), `non-redux: StoreProvider should be absent (${stateManagement})`);
   }
 
+  // Providers / contexts (split: feat contexts/ + providers/, comp co-localized in providers/)
+  if (architecture === "feature-based") {
+    assert.ok(
+      await exists(path.join(projectPath, `src/app/contexts/themecontext.${ext === "tsx" ? "ts" : "js"}`)),
+      "feat: app/contexts/themecontext missing"
+    );
+    assert.ok(
+      await exists(path.join(projectPath, `src/app/providers/ThemeProvider.${ext}`)),
+      "feat: app/providers/ThemeProvider missing"
+    );
+    assert.ok(
+      await exists(path.join(projectPath, `src/app/hooks/useTheme.${ext === "tsx" ? "ts" : "js"}`)),
+      "feat: app/hooks/useTheme missing"
+    );
+  } else {
+    assert.ok(
+      await exists(path.join(projectPath, `src/providers/AppProvider.${ext}`)),
+      "comp: providers/AppProvider missing"
+    );
+    assert.ok(
+      await exists(path.join(projectPath, `src/providers/appcontext.${ext === "tsx" ? "ts" : "js"}`)),
+      "comp: providers/appcontext missing"
+    );
+    assert.ok(
+      await exists(path.join(projectPath, `src/hooks/useApp.${ext === "tsx" ? "ts" : "js"}`)),
+      "comp: hooks/useApp missing"
+    );
+    assert.ok(
+      !(await exists(path.join(projectPath, "src/context"))),
+      "comp: legacy src/context/ should not exist"
+    );
+  }
+
   // Router
   if (router) {
+    const base = architecture === "feature-based" ? "src/app/router" : "src/router";
+    assert.ok(await exists(path.join(projectPath, `${base}/index.${ext}`)), `router: ${base}/index missing`);
+    assert.ok(await exists(path.join(projectPath, `${base}/guards/AuthGuard.${ext}`)), "router: guards/AuthGuard missing");
     if (architecture === "feature-based") {
-      assert.ok(await exists(path.join(projectPath, `src/app/router.${ext}`)), "router: src/app/router missing");
+      assert.ok(await exists(path.join(projectPath, `${base}/guards/RoleGuard.${ext}`)), "router: guards/RoleGuard missing");
+      assert.ok(await exists(path.join(projectPath, `${base}/routes/home.routes.${ext}`)), "router: routes/home.routes missing");
+      assert.ok(await exists(path.join(projectPath, `${base}/routes/auth.routes.${ext}`)), "router: routes/auth.routes missing");
     } else {
-      assert.ok(await exists(path.join(projectPath, `src/routes/index.${ext}`)), "router: src/routes/index missing");
+      assert.ok(await exists(path.join(projectPath, `${base}/guards/GuestGuard.${ext}`)), "router: guards/GuestGuard missing");
+      assert.ok(
+        !(await exists(path.join(projectPath, `${base}/routes`))),
+        `router: ${base}/routes should not exist (centralized router)`
+      );
     }
   }
 
@@ -184,10 +230,15 @@ async function check(responses, projectPath) {
     assert.ok(!scripts.typecheck, "js: typecheck script should be absent");
   }
 
-  // types/ parity: both architectures ship a src/types/index in the active language
+  // types/ parity: both architectures ship a types index in the active language
+  // (component-based at src/types, feature-based at src/shared/types)
+  const typesRel =
+    architecture === "component-based"
+      ? `src/types/index.${language === "ts" ? "ts" : "js"}`
+      : `src/shared/types/index.${language === "ts" ? "ts" : "js"}`;
   assert.ok(
-    await exists(path.join(projectPath, `src/types/index.${language === "ts" ? "ts" : "js"}`)),
-    `types: src/types/index.${language === "ts" ? "ts" : "js"} missing`
+    await exists(path.join(projectPath, typesRel)),
+    `types: ${typesRel} missing`
   );
 
   // axios API client layer
@@ -207,6 +258,11 @@ async function check(responses, projectPath) {
         !(await exists(path.join(projectPath, architecture === "component-based" ? "src/services/axios.jsx" : "src/shared/lib/axios.jsx"))),
       "axios: old flat axios file present"
     );
+    if (architecture === "feature-based") {
+      assert.ok(!(await exists(path.join(projectPath, "src/shared/api"))), "axios: stray shared/api folder");
+    } else {
+      assert.ok(!(await exists(path.join(projectPath, "src/services/.gitkeep"))), "axios: stray services/.gitkeep");
+    }
   } else if (apiClient === "fetch") {
     const fetchRoutes =
       architecture === "component-based"
@@ -232,6 +288,9 @@ async function check(responses, projectPath) {
     if (architecture === "feature-based") {
       assert.ok(!(await exists(path.join(projectPath, "src/shared/lib/index.ts"))), "fetch: shared/lib/index.ts present");
       assert.ok(!(await exists(path.join(projectPath, "src/shared/lib/index.js"))), "fetch: shared/lib/index.js present");
+      assert.ok(!(await exists(path.join(projectPath, "src/shared/lib"))), "fetch: stray shared/lib folder");
+    } else {
+      assert.ok(!(await exists(path.join(projectPath, "src/services/.gitkeep"))), "fetch: stray services/.gitkeep");
     }
   } else {
     assert.ok(
@@ -240,6 +299,9 @@ async function check(responses, projectPath) {
       `non-axios: stray config/axios.config (${apiClient})`
     );
     assert.ok(!(await exists(path.join(projectPath, "src/lib/axios"))) && !(await exists(path.join(projectPath, "src/shared/lib/axios"))), `non-axios: stray lib/axios (${apiClient})`);
+    if (architecture === "feature-based") {
+      assert.ok(!(await exists(path.join(projectPath, "src/shared/lib"))), `non-axios: stray shared/lib (${apiClient})`);
+    }
     assert.ok(
       !(await exists(path.join(projectPath, "src/config/api.config.ts"))) &&
         !(await exists(path.join(projectPath, "src/config/api.config.js"))),
@@ -273,17 +335,36 @@ async function check(responses, projectPath) {
 
   // CSS framework markup parity: every architecture expresses the shared look
   // in the chosen framework's idiom (tailwind classes / bootstrap utilities /
-  // inline styles), and the imported globals carry that framework's content.
-  const globalsRel =
+  // CSS variables / inline styles), and the imported stylesheet carries that
+  // framework's content. Vanilla CSS uses main.css; tailwind/bootstrap keep
+  // globals.css. themes.css lives next to it in every case.
+  const mainFileName = cssFramework === "none" ? "main.css" : "globals.css";
+  const mainRel =
     architecture === "feature-based"
-      ? "src/shared/styles/globals.css"
-      : "src/styles/globals.css";
-  const globals = await fsp.readFile(path.join(projectPath, globalsRel), "utf8");
+      ? `src/shared/styles/${mainFileName}`
+      : `src/styles/${mainFileName}`;
+  const mainCss = await fsp.readFile(path.join(projectPath, mainRel), "utf8");
+  const themesRel =
+    architecture === "feature-based"
+      ? "src/shared/styles/themes.css"
+      : "src/styles/themes.css";
+  assert.ok(
+    await exists(path.join(projectPath, themesRel)),
+    "css: themes.css missing (every framework ships one)"
+  );
   if (cssFramework === "tailwind") {
-    assert.ok(/@import[^;]*tailwindcss/.test(globals), "globals: tailwind import missing");
+    assert.ok(/@import[^;]*tailwindcss/.test(mainCss), "css: tailwind import missing");
   } else if (cssFramework === "none") {
-    assert.ok(globals.includes("box-sizing"), "globals: reset missing (cssFramework none)");
+    assert.ok(mainCss.includes("box-sizing"), "css: reset missing (cssFramework none)");
+    assert.ok(
+      mainCss.includes("var(--color-"),
+      "css: vanilla stylesheet should consume CSS variables (none framework)"
+    );
   }
+  assert.ok(
+    !(await exists(path.join(projectPath, "src/index.css"))),
+    "css: src/index.css should not exist (Vite leftover; CSS lives in styles/)"
+  );
   const homeRel =
     architecture === "feature-based"
       ? `src/features/home/pages/HomePage.${ext}`

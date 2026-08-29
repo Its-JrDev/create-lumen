@@ -1,5 +1,10 @@
-import { AppRoutes } from "@/routes";
+import { AppProvider } from '@/providers/AppProvider';
+import { AppRoutes } from '@/router';
 
 export default function App() {
-  return <AppRoutes />;
+  return (
+    <AppProvider>
+      <AppRoutes />
+    </AppProvider>
+  );
 }

@@ -79,7 +79,6 @@ const PARITY_FILE_CANDIDATES = [
   "scripts/create-feature.mjs",
   "vite.config.ts", "vitest.config.ts", "jest.config.ts",
   "eslint.config.ts", "eslint.config.js",
-  "src/context/app-context.ts", "src/context/AppContext.tsx",
   "src/types/index.ts", "src/types/index.js",
   "src/shared/types/index.ts", "src/shared/types/index.js",
   "src/config/axios.config.ts", "src/config/axios.config.js",
@@ -93,6 +92,22 @@ const PARITY_FILE_CANDIDATES = [
   "src/shared/api/api.config.ts", "src/shared/api/api.config.js",
   "src/shared/api/api.client.ts", "src/shared/api/api.client.js",
   "src/features/home/services/user.service.ts", "src/features/home/services/user.service.js",
+  "src/app/router/index.tsx", "src/app/router/index.jsx",
+  "src/app/router/guards/AuthGuard.tsx", "src/app/router/guards/AuthGuard.jsx",
+  "src/app/router/guards/RoleGuard.tsx", "src/app/router/guards/RoleGuard.jsx",
+  "src/app/router/routes/home.routes.tsx", "src/app/router/routes/home.routes.jsx",
+  "src/app/router/routes/auth.routes.tsx", "src/app/router/routes/auth.routes.jsx",
+  "src/router/index.tsx", "src/router/index.jsx",
+  "src/router/guards/AuthGuard.tsx", "src/router/guards/AuthGuard.jsx",
+  "src/router/guards/GuestGuard.tsx", "src/router/guards/GuestGuard.jsx",
+  "src/providers/AppProvider.tsx", "src/providers/AppProvider.jsx",
+  "src/providers/appcontext.ts", "src/providers/appcontext.js",
+  "src/hooks/useApp.ts", "src/hooks/useApp.js",
+  "src/app/contexts/themecontext.ts", "src/app/contexts/themecontext.js",
+  "src/app/providers/ThemeProvider.tsx", "src/app/providers/ThemeProvider.jsx",
+  "src/app/hooks/useTheme.ts", "src/app/hooks/useTheme.js",
+  "src/app/providers/StoreProvider.tsx", "src/app/providers/StoreProvider.jsx",
+  "src/providers/StoreProvider.tsx", "src/providers/StoreProvider.jsx",
 ];
 
 // Run a tool binary from the vendored toolchain against the project.
@@ -282,8 +297,8 @@ async function audit(responses, projectPath) {
       `stray config/axios.config (${apiClient})`
     );
     ok(!(await exists(path.join(projectPath, "src/lib/axios"))), `stray lib/axios (${apiClient})`);
-    // feature-based keeps an empty shared/lib/axios placeholder (.gitkeep) even
-    // when axios is not chosen, so only the real client files signal a leak.
+    // feature-based ships `shared/lib` only when axios is chosen, so an empty
+    // placeholder never leaks alone — check real client files for leaks.
     if (architecture === "component-based") {
       ok(!(await exists(path.join(projectPath, "src/shared/lib/axios"))), `stray shared/lib/axios (${apiClient})`);
     } else {
@@ -363,21 +378,36 @@ async function audit(responses, projectPath) {
   }
 
   // CSS framework parity (regression gate for the v1.2.0 globals path fix):
-  // the global stylesheet the architecture actually imports must carry the
-  // selected framework's content, and presentational components must be
-  // expressed in that framework's markup rather than a stale Tailwind look.
-  const globalsRel =
+  // the main stylesheet the architecture actually imports must carry the
+  // selected framework's content (main.css for vanilla, globals.css for
+  // tailwind/bootstrap), themes.css must live next to it, and src/index.css
+  // (Vite leftover) must be absent.
+  const mainFileName = cssFramework === "none" ? "main.css" : "globals.css";
+  const mainRel =
     architecture === "feature-based"
-      ? "src/shared/styles/globals.css"
-      : "src/styles/globals.css";
-  if (await exists(path.join(projectPath, globalsRel))) {
-    const globals = await fsp.readFile(path.join(projectPath, globalsRel), "utf8");
+      ? `src/shared/styles/${mainFileName}`
+      : `src/styles/${mainFileName}`;
+  const themesRel =
+    architecture === "feature-based"
+      ? "src/shared/styles/themes.css"
+      : "src/styles/themes.css";
+  if (await exists(path.join(projectPath, mainRel))) {
+    const main = await fsp.readFile(path.join(projectPath, mainRel), "utf8");
     if (cssFramework === "tailwind") {
-      ok(/@import[^;]*tailwindcss/.test(globals), "globals: tailwind import missing");
+      ok(/@import[^;]*tailwindcss/.test(main), "css: tailwind import missing");
     } else if (cssFramework === "none") {
-      ok(globals.includes("box-sizing"), "globals: reset missing (cssFramework none)");
+      ok(main.includes("box-sizing"), "css: reset missing (cssFramework none)");
+      ok(main.includes("var(--color-"), "css: vanilla stylesheet should consume CSS variables");
     }
   }
+  ok(
+    !(await exists(path.join(projectPath, "src/index.css"))),
+    "css: src/index.css should not exist"
+  );
+  ok(
+    await exists(path.join(projectPath, themesRel)),
+    "css: themes.css missing"
+  );
   const homeRel =
     architecture === "feature-based"
       ? `src/features/home/pages/HomePage.${language === "ts" ? "tsx" : "jsx"}`
