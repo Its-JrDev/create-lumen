@@ -32,15 +32,20 @@ const ROUTES = (architecture, ext) =>
         `src/config/axios.config.${ext}`,
         `src/services/axios.client.${ext}`,
         `src/services/user.service.${ext}`,
-        `src/services/index.${ext}`,
       ]
     : [
-        `src/lib/axios/api.config.${ext}`,
-        `src/lib/axios/api.client.${ext}`,
-        `src/lib/axios/index.${ext}`,
+        `src/shared/lib/axios/api.config.${ext}`,
+        `src/shared/lib/axios/api.client.${ext}`,
+        `src/shared/lib/axios/index.${ext}`,
         `src/features/home/services/user.service.${ext}`,
-        `src/features/home/services/index.${ext}`,
       ];
+
+// Barrels that re-exported userService / api under services are removed in
+// pase 4 (no consumers): services/index (comp) and features/home/services/index (feat).
+const DEAD_SERVICE_BARRELS = (architecture, ext) =>
+  architecture === "component-based"
+    ? [`src/services/index.${ext}`]
+    : [`src/features/home/services/index.${ext}`];
 
 async function exists(p) {
   try {
@@ -84,7 +89,7 @@ for (const { architecture, language } of COMBOS) {
     const oldFlat =
       architecture === "component-based"
         ? ["src/services/axios.ts", "src/services/axios.jsx"]
-        : ["src/lib/axios.ts", "src/lib/axios.jsx"];
+        : ["src/shared/lib/axios.ts", "src/shared/lib/axios.jsx"];
     for (const rel of oldFlat) {
       assert.ok(!(await exists(path.join(dir, rel))), `old flat axios file still present: ${rel}`);
     }
@@ -93,24 +98,24 @@ for (const { architecture, language } of COMBOS) {
     const clientRel =
       architecture === "component-based"
         ? `src/services/axios.client.${ext}`
-        : `src/lib/axios/api.client.${ext}`;
-    const barrelRel =
-      architecture === "component-based"
-        ? `src/services/index.${ext}`
-        : `src/lib/axios/index.${ext}`;
+        : `src/shared/lib/axios/api.client.${ext}`;
     const client = await fsp.readFile(path.join(dir, clientRel), "utf8");
     assert.match(client, /const api = axios\.create\(/, "axios client is not named api");
     assert.match(client, /export default api;/, "axios client not default-exported as api");
     assert.doesNotMatch(client, /apiClient/, "apiClient leaked into axios client");
-    const barrel = await fsp.readFile(path.join(dir, barrelRel), "utf8");
-    assert.match(barrel, /export \{ default as api \} from "\.\/(axios\.client|api\.client)";/, "axios barrel does not re-export api");
-    assert.doesNotMatch(barrel, /apiClient/, "apiClient leaked into axios barrel");
-    const svcIndexRel =
-      architecture === "component-based"
-        ? `src/services/index.${ext}`
-        : `src/features/home/services/index.${ext}`;
-    const svcIndex = await fsp.readFile(path.join(dir, svcIndexRel), "utf8");
-    assert.match(svcIndex, /export \{ userService \} from "\.\/user\.service";/, "axios services barrel missing userService");
+
+    // The dead userService/api barrels that had no consumers must be gone.
+    for (const rel of DEAD_SERVICE_BARRELS(architecture, ext)) {
+      assert.ok(!(await exists(path.join(dir, rel))), `dead service barrel still present: ${rel}`);
+    }
+
+    // feature-based keeps the shared lib/axios barrel that supplies the named `api`.
+    if (architecture === "feature-based") {
+      const barrelRel = `src/shared/lib/axios/index.${ext}`;
+      const barrel = await fsp.readFile(path.join(dir, barrelRel), "utf8");
+      assert.match(barrel, /export \{ default as api \} from "\.\/api\.client";/, "axios feat barrel does not re-export api");
+      assert.doesNotMatch(barrel, /apiClient/, "apiClient leaked into axios feat barrel");
+    }
 
     await fsp.rm(dir, { recursive: true, force: true });
   });
@@ -124,11 +129,11 @@ for (const { architecture, language } of COMBOS) {
         : `src/features/home/services/user.service.${languageExt}`;
     const service = await fsp.readFile(path.join(dir, serviceRel), "utf8");
 
-    assert.match(service, /@\/types/, "user.service does not reference @/types");
+    assert.match(service, /@\/types|@\/shared\/types/, "user.service does not reference types");
     if (architecture === "component-based") {
       assert.match(service, /import api from "@\/services\/axios\.client";/, "comp user.service missing api import");
     } else {
-      assert.match(service, /import \{ api \} from "@\/lib\/axios";/, "feat user.service missing api import");
+      assert.match(service, /import \{ api \} from "@\/shared\/lib\/axios";/, "feat user.service missing api import");
     }
     assert.doesNotMatch(service, /apiClient/, "apiClient leaked into user.service");
 
@@ -141,7 +146,7 @@ for (const { architecture, language } of COMBOS) {
     const configRel =
       architecture === "component-based"
         ? `src/config/axios.config.${languageExt}`
-        : `src/lib/axios/api.config.${languageExt}`;
+        : `src/shared/lib/axios/api.config.${languageExt}`;
     const config = await fsp.readFile(path.join(dir, configRel), "utf8");
 
     assert.match(config, /VITE_API_URL/, "config does not reference VITE_API_URL");
@@ -171,14 +176,12 @@ for (const { architecture, language } of COMBOS) {
             `src/config/api.config.${ext}`,
             `src/services/api.client.${ext}`,
             `src/services/user.service.${ext}`,
-            `src/services/index.${ext}`,
           ]
         : [
-            `src/lib/api/api.config.${ext}`,
-            `src/lib/api/api.client.${ext}`,
-            `src/lib/api/index.${ext}`,
+            `src/shared/api/api.config.${ext}`,
+            `src/shared/api/api.client.${ext}`,
+            `src/shared/api/index.${ext}`,
             `src/features/home/services/user.service.${ext}`,
-            `src/features/home/services/index.${ext}`,
           ];
     for (const rel of routes) {
       assert.ok(await exists(path.join(dir, rel)), `${rel} missing`);
@@ -195,7 +198,7 @@ for (const { architecture, language } of COMBOS) {
     const oldMonolithic =
       architecture === "component-based"
         ? ["src/services/api.ts", "src/services/api.jsx"]
-        : ["src/lib/api.ts", "src/lib/api.jsx", "src/lib/index.ts", "src/lib/index.js"];
+        : ["src/shared/api.ts", "src/shared/api.jsx", "src/shared/lib/index.ts", "src/shared/lib/index.js"];
     for (const rel of oldMonolithic) {
       assert.ok(!(await exists(path.join(dir, rel))), `old monolithic fetch file still present: ${rel}`);
     }
@@ -204,7 +207,7 @@ for (const { architecture, language } of COMBOS) {
     const clientRel =
       architecture === "component-based"
         ? `src/services/api.client.${ext}`
-        : `src/lib/api/api.client.${ext}`;
+        : `src/shared/api/api.client.${ext}`;
     const client = await fsp.readFile(path.join(dir, clientRel), "utf8");
     assert.match(client, /export default api;/, "fetch client is not default-exported as api");
     for (const method of ["get", "post", "put", "delete"]) {
@@ -212,20 +215,18 @@ for (const { architecture, language } of COMBOS) {
     }
     assert.doesNotMatch(client, /apiClient/, "apiClient leaked into fetch client");
 
-    // Barrels re-export api and userService.
-    const barrelRel =
-      architecture === "component-based"
-        ? `src/services/index.${ext}`
-        : `src/lib/api/index.${ext}`;
-    const barrel = await fsp.readFile(path.join(dir, barrelRel), "utf8");
-    assert.match(barrel, /export \{ default as api \} from "\.\/api\.client";/, "fetch barrel does not re-export api");
-    assert.doesNotMatch(barrel, /apiClient/, "apiClient leaked into fetch barrel");
-    const svcIndexRel =
-      architecture === "component-based"
-        ? `src/services/index.${ext}`
-        : `src/features/home/services/index.${ext}`;
-    const svcIndex = await fsp.readFile(path.join(dir, svcIndexRel), "utf8");
-    assert.match(svcIndex, /export \{ userService \} from "\.\/user\.service";/, "fetch services barrel missing userService");
+    // The dead userService/api barrels that had no consumers must be gone.
+    for (const rel of DEAD_SERVICE_BARRELS(architecture, ext)) {
+      assert.ok(!(await exists(path.join(dir, rel))), `dead service barrel still present: ${rel}`);
+    }
+
+    // feature-based keeps the shared/api barrel that supplies the named `api`.
+    if (architecture === "feature-based") {
+      const barrelRel = `src/shared/api/index.${ext}`;
+      const barrel = await fsp.readFile(path.join(dir, barrelRel), "utf8");
+      assert.match(barrel, /export \{ default as api \} from "\.\/api\.client";/, "fetch feat barrel does not re-export api");
+      assert.doesNotMatch(barrel, /apiClient/, "apiClient leaked into fetch feat barrel");
+    }
 
     await fsp.rm(dir, { recursive: true, force: true });
   });
@@ -239,11 +240,11 @@ for (const { architecture, language } of COMBOS) {
         : `src/features/home/services/user.service.${languageExt}`;
     const service = await fsp.readFile(path.join(dir, serviceRel), "utf8");
 
-    assert.match(service, /@\/types/, "user.service does not reference @/types");
+    assert.match(service, /@\/types|@\/shared\/types/, "user.service does not reference types");
     if (architecture === "component-based") {
       assert.match(service, /import api from "@\/services\/api\.client";/, "comp user.service missing api import");
     } else {
-      assert.match(service, /import \{ api \} from "@\/lib\/api";/, "feat user.service missing api import");
+      assert.match(service, /import \{ api \} from "@\/shared\/api";/, "feat user.service missing api import");
     }
     for (const call of ["api.get", "api.post", "api.put", "api.delete"]) {
       assert.ok(service.includes(call), `user.service missing ${call} call`);
@@ -259,7 +260,7 @@ for (const { architecture, language } of COMBOS) {
     const configRel =
       architecture === "component-based"
         ? `src/config/api.config.${languageExt}`
-        : `src/lib/api/api.config.${languageExt}`;
+        : `src/shared/api/api.config.${languageExt}`;
     const config = await fsp.readFile(path.join(dir, configRel), "utf8");
 
     assert.match(config, /VITE_API_URL/, "config does not reference VITE_API_URL");

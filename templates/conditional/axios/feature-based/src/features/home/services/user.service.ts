@@ -1,5 +1,5 @@
-import { api } from "@/lib/axios";
-import type { ApiResponse, CreateUserPayload, User } from "@/types";
+import { api } from "@/shared/lib/axios";
+import type { ApiResponse, CreateUserPayload, User } from "@/shared/types";
 
 export const userService = {
   async getAll(): Promise<ApiResponse<User[]>> {

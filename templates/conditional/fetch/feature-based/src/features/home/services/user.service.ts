@@ -1,5 +1,5 @@
-import { api } from "@/lib/api";
-import type { ApiResponse, CreateUserPayload, User } from "@/types";
+import { api } from "@/shared/api";
+import type { ApiResponse, CreateUserPayload, User } from "@/shared/types";
 
 export const userService = {
   async getAll(): Promise<ApiResponse<User[]>> {

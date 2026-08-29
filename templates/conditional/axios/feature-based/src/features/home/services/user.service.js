@@ -1,9 +1,9 @@
 /**
- * @typedef {import("@/types").ApiResponse} ApiResponse
- * @typedef {import("@/types").CreateUserPayload} CreateUserPayload
- * @typedef {import("@/types").User} User
+ * @typedef {import("@/shared/types").ApiResponse} ApiResponse
+ * @typedef {import("@/shared/types").CreateUserPayload} CreateUserPayload
+ * @typedef {import("@/shared/types").User} User
  */
-import { api } from "@/lib/axios";
+import { api } from "@/shared/lib/axios";
 
 export const userService = {
   async getAll() {

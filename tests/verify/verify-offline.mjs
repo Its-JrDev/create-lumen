@@ -73,23 +73,24 @@ async function generate(responses, baseApp, projectPath) {
 const PARITY_FILE_CANDIDATES = [
   "src/app/App.tsx", "src/app/App.jsx",
   "src/components/ui/Button.tsx", "src/components/ui/Button.jsx",
+  "src/shared/components/ui/Button.tsx", "src/shared/components/ui/Button.jsx",
   "src/main.tsx", "src/main.jsx",
   "scripts/create-feature.mjs",
   "vite.config.ts", "vitest.config.ts", "jest.config.ts",
   "eslint.config.ts", "eslint.config.js",
   "src/context/app-context.ts", "src/context/AppContext.tsx",
   "src/types/index.ts", "src/types/index.js",
+  "src/shared/types/index.ts", "src/shared/types/index.js",
   "src/config/axios.config.ts", "src/config/axios.config.js",
   "src/services/axios.client.ts", "src/services/axios.client.js",
   "src/services/user.service.ts", "src/services/user.service.js",
-  "src/lib/axios/api.config.ts", "src/lib/axios/api.config.js",
-  "src/lib/axios/api.client.ts", "src/lib/axios/api.client.js",
+  "src/shared/lib/axios/api.config.ts", "src/shared/lib/axios/api.config.js",
+  "src/shared/lib/axios/api.client.ts", "src/shared/lib/axios/api.client.js",
   "src/features/home/services/user.service.ts", "src/features/home/services/user.service.js",
   "src/config/api.config.ts", "src/config/api.config.js",
   "src/services/api.client.ts", "src/services/api.client.js",
-  "src/services/user.service.ts", "src/services/user.service.js",
-  "src/lib/api/api.config.ts", "src/lib/api/api.config.js",
-  "src/lib/api/api.client.ts", "src/lib/api/api.client.js",
+  "src/shared/api/api.config.ts", "src/shared/api/api.config.js",
+  "src/shared/api/api.client.ts", "src/shared/api/api.client.js",
   "src/features/home/services/user.service.ts", "src/features/home/services/user.service.js",
 ];
 
@@ -214,10 +215,11 @@ async function audit(responses, projectPath) {
   const ok = (cond, msg) => { if (!cond) errors.push(msg); };
 
   ok(await exists(path.join(projectPath, `src/main.${language === "ts" ? "tsx" : "jsx"}`)), "main entry missing");
-  ok(
-    await exists(path.join(projectPath, `src/types/index.${language === "ts" ? "ts" : "js"}`)),
-    `src/types/index.${language === "ts" ? "ts" : "js"} missing`
-  );
+  const typesRel =
+    architecture === "component-based"
+      ? `src/types/index.${language === "ts" ? "ts" : "js"}`
+      : `src/shared/types/index.${language === "ts" ? "ts" : "js"}`;
+  ok(await exists(path.join(projectPath, typesRel)), `${typesRel} missing`);
 
   const axiosRoutes =
     architecture === "component-based"
@@ -225,20 +227,18 @@ async function audit(responses, projectPath) {
           `src/config/axios.config.${extConfig}`,
           `src/services/axios.client.${extConfig}`,
           `src/services/user.service.${extConfig}`,
-          `src/services/index.${extConfig}`,
         ]
       : [
-          `src/lib/axios/api.config.${extConfig}`,
-          `src/lib/axios/api.client.${extConfig}`,
-          `src/lib/axios/index.${extConfig}`,
+          `src/shared/lib/axios/api.config.${extConfig}`,
+          `src/shared/lib/axios/api.client.${extConfig}`,
+          `src/shared/lib/axios/index.${extConfig}`,
           `src/features/home/services/user.service.${extConfig}`,
-          `src/features/home/services/index.${extConfig}`,
         ];
   if (apiClient === "axios") {
     for (const rel of axiosRoutes) {
       ok(await exists(path.join(projectPath, rel)), `${rel} missing`);
     }
-    const oldFlat = architecture === "component-based" ? "src/services" : "src/lib";
+    const oldFlat = architecture === "component-based" ? "src/services" : "src/shared/lib";
     ok(
       !(await exists(path.join(projectPath, oldFlat, "axios.ts"))) &&
         !(await exists(path.join(projectPath, oldFlat, "axios.jsx"))),
@@ -251,19 +251,17 @@ async function audit(responses, projectPath) {
             `src/config/api.config.${extConfig}`,
             `src/services/api.client.${extConfig}`,
             `src/services/user.service.${extConfig}`,
-            `src/services/index.${extConfig}`,
           ]
         : [
-            `src/lib/api/api.config.${extConfig}`,
-            `src/lib/api/api.client.${extConfig}`,
-            `src/lib/api/index.${extConfig}`,
+            `src/shared/api/api.config.${extConfig}`,
+            `src/shared/api/api.client.${extConfig}`,
+            `src/shared/api/index.${extConfig}`,
             `src/features/home/services/user.service.${extConfig}`,
-            `src/features/home/services/index.${extConfig}`,
           ];
     for (const rel of fetchRoutes) {
       ok(await exists(path.join(projectPath, rel)), `${rel} missing`);
     }
-    const oldMono = architecture === "component-based" ? "src/services" : "src/lib";
+    const oldMono = architecture === "component-based" ? "src/services" : "src/shared";
     ok(
       !(await exists(path.join(projectPath, oldMono, "api.ts"))) &&
         !(await exists(path.join(projectPath, oldMono, "api.jsx"))),
@@ -271,9 +269,9 @@ async function audit(responses, projectPath) {
     );
     if (architecture === "feature-based") {
       ok(
-        !(await exists(path.join(projectPath, "src/lib/index.ts"))) &&
-          !(await exists(path.join(projectPath, "src/lib/index.js"))),
-        "lib/index still present"
+        !(await exists(path.join(projectPath, "src/shared/lib/index.ts"))) &&
+          !(await exists(path.join(projectPath, "src/shared/lib/index.js"))),
+        "shared/lib/index still present"
       );
     }
   } else {
@@ -283,6 +281,17 @@ async function audit(responses, projectPath) {
       `stray config/axios.config (${apiClient})`
     );
     ok(!(await exists(path.join(projectPath, "src/lib/axios"))), `stray lib/axios (${apiClient})`);
+    // feature-based keeps an empty shared/lib/axios placeholder (.gitkeep) even
+    // when axios is not chosen, so only the real client files signal a leak.
+    if (architecture === "component-based") {
+      ok(!(await exists(path.join(projectPath, "src/shared/lib/axios"))), `stray shared/lib/axios (${apiClient})`);
+    } else {
+      ok(
+        !(await exists(path.join(projectPath, "src/shared/lib/axios/api.client.ts"))) &&
+          !(await exists(path.join(projectPath, "src/shared/lib/axios/api.client.js"))),
+        `stray shared/lib/axios api.client (${apiClient})`
+      );
+    }
     ok(
       !(await exists(path.join(projectPath, "src/services/axios.client.ts"))) &&
         !(await exists(path.join(projectPath, "src/services/axios.client.js"))),
@@ -294,12 +303,43 @@ async function audit(responses, projectPath) {
       `stray config/api.config (${apiClient})`
     );
     ok(!(await exists(path.join(projectPath, "src/lib/api"))), `stray lib/api (${apiClient})`);
+    if (architecture === "component-based") {
+      ok(!(await exists(path.join(projectPath, "src/shared/api"))), `stray shared/api (${apiClient})`);
+    } else {
+      ok(
+        !(await exists(path.join(projectPath, "src/shared/api/api.client.ts"))) &&
+          !(await exists(path.join(projectPath, "src/shared/api/api.client.js"))),
+        `stray shared/api api.client (${apiClient})`
+      );
+    }
   }
   ok(
     !(await exists(path.join(projectPath, "src/config/constants.ts"))) &&
       !(await exists(path.join(projectPath, "src/config/constants.js"))),
     "config/constants still present"
   );
+
+  // Pase 4: dead service barrels (no consumers) are removed in both architectures,
+  // while the public feature barrel and per-feature types/.gitkeep are kept.
+  const deadSvcBarrels = architecture === "component-based" ? ["src/services/index"] : ["src/features/home/services/index"];
+  for (const rel of deadSvcBarrels) {
+    ok(
+      !(await exists(path.join(projectPath, `${rel}.${extConfig}`))) &&
+        !(await exists(path.join(projectPath, `${rel}.${extConfig === "ts" ? "js" : "ts"}`))),
+      `dead service barrel still present: ${rel}`
+    );
+  }
+  if (architecture === "feature-based") {
+    const activeLang = language === "ts" ? "ts" : "js";
+    ok(
+      await exists(path.join(projectPath, `src/features/home/index.${activeLang}`)),
+      `features/home public barrel (${activeLang}) missing`
+    );
+    ok(
+      await exists(path.join(projectPath, "src/features/home/types/.gitkeep")),
+      "features/home/types/.gitkeep missing"
+    );
+  }
 
   if (linter === "eslint") {
     ok(await exists(path.join(projectPath, `eslint.config.${extConfig}`)), "eslint config missing");

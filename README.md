@@ -99,7 +99,6 @@ src/
 ├── features
 │   └── logout
 │       ├── components
-│       ├── interfaces
 │       ├── layouts
 │       ├── pages
 │       ├── services

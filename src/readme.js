@@ -90,14 +90,19 @@ function buildScripts(responses) {
 function buildProjectStructure(architecture) {
   if (architecture === "feature-based") {
     return `src/
-├── app/          # App shell and providers
-├── components/   # Shared UI components
-├── features/     # Feature modules (pages, hooks, api)
-├── hooks/        # Shared custom hooks
-├── lib/          # Shared library (api client)
-├── stores/       # Global state stores
-├── types/        # TypeScript type definitions
-└── utils/        # Utility functions`;
+├── app/          # App shell and global providers
+├── features/     # Feature modules (pages, hooks, api, types)
+│   └── home/     # Example feature (components, services, types, store)
+└── shared/       # Reusable, business-agnostic resources
+    ├── api/      # HTTP client (fetch) — not an external dependency
+    ├── components/ # Shared UI components
+    ├── hooks/    # Shared custom hooks
+    ├── layouts/  # High-level layout wrappers
+    ├── lib/      # Third-party library init (axios client)
+    ├── stores/   # Global state stores
+    ├── styles/   # Global styles
+    ├── types/    # Global type definitions
+    └── utils/    # Pure utility functions`;
   }
 
   return `src/

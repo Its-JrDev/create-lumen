@@ -19,19 +19,19 @@ const featureDir = path.join(process.cwd(), "src", "features", formattedName);
 const subdirectories = [
   "components",
   "hooks",
-  "interfaces",
   "layouts",
   "pages",
   "services",
   "store",
+  "types",
 ];
 
 // 3. Initial files with starter content
 const initialFiles = {
-  "interfaces/index.ts": `// Types and contracts for the ${formattedName} module\n`,
   "services/index.ts": `// Endpoints and async calls for the ${formattedName} module\n`,
   "store/index.ts": `// State for the ${formattedName} module\n`,
   "pages/index.ts": `// Page components for the ${formattedName} module\n`,
+  "types/index.ts": `// Types exclusive to the ${formattedName} module\n`,
 };
 
 // 4. Create the feature

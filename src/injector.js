@@ -332,11 +332,11 @@ async function injectCreateFeatureScript(projectPath, templatesDir, language) {
     if (language === "js") {
       // Replace .ts extensions with .js in the initialFiles
       content = content
-        .replace(/interfaces\/index\.ts/g, "interfaces/index.js")
         .replace(/services\/index\.ts/g, "services/index.js")
         .replace(/store\/index\.ts/g, "store/index.js")
         .replace(/hooks\/index\.ts/g, "hooks/index.js")
-        .replace(/pages\/index\.ts/g, "pages/index.js");
+        .replace(/pages\/index\.ts/g, "pages/index.js")
+        .replace(/types\/index\.ts/g, "types/index.js");
     }
 
     await writeFileRecursive(scriptDest, content);

@@ -1,6 +1,6 @@
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Sun01Icon, Moon01Icon, Github01Icon } from "@hugeicons/core-free-icons";
-import { Button } from "@/components/ui";
+import { Button } from "@/shared/components/ui";
 
 export function HomePage() {
   return (

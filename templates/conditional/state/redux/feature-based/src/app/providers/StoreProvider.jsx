@@ -1,5 +1,5 @@
 import { Provider } from "react-redux";
-import { store } from "@/stores";
+import { store } from "@/shared/stores";
 
 export function StoreProvider({ children }) {
   return <Provider store={store}>{children}</Provider>;
