@@ -1,29 +1,55 @@
 # FAQ
 
-## ¿Qué es `create-lumen`?
+## English
 
-Es un CLI para generar proyectos React + Vite con una base estructurada y opciones comunes de arranque.
+### What is `create-lumen`?
 
-## ¿Este repositorio es una app de ejemplo?
+A CLI scaffolder for React + Vite starter projects.
 
-No. Este repositorio contiene la herramienta generadora. La app se crea en el directorio destino al ejecutar el comando.
+### Is this repository a generated app?
 
-## ¿Necesito instalarlo globalmente?
+No. It is the generator tool repository.
 
-No necesariamente. Puedes usarlo directamente con:
+### Do I need global installation?
+
+Not required:
+
+```bash
+npm create lumen my-app
+```
+
+### Which Node version is required?
+
+Node.js >= 18.
+
+### Where should team-specific commands go?
+
+In this wiki, replacing `TODO` placeholders with confirmed internal steps.
+
+---
+
+## Español
+
+### ¿Qué es `create-lumen`?
+
+Un CLI para generar proyectos base en React + Vite.
+
+### ¿Este repositorio es una app generada?
+
+No. Es el repositorio de la herramienta generadora.
+
+### ¿Necesito instalación global?
+
+No es obligatorio:
 
 ```bash
 npm create lumen mi-app
 ```
 
-## ¿Qué versión de Node necesito?
+### ¿Qué versión de Node se requiere?
 
 Node.js >= 18.
 
-## ¿Cómo reporto errores o propongo mejoras?
+### ¿Dónde van los comandos internos del equipo?
 
-Abre un issue o un pull request en el repositorio `Its-JrDev/create-lumen`.
-
-## ¿Dónde agrego comandos específicos de mi equipo?
-
-Puedes extender esta wiki y completar los bloques `TODO` con comandos confirmados por tu flujo interno.
+En esta wiki, reemplazando los placeholders `TODO` con pasos internos confirmados.

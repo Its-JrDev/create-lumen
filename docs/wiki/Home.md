@@ -1,29 +1,39 @@
 # create-lumen Wiki
 
-Bienvenido/a a la wiki de **create-lumen**.
+## English
 
-`create-lumen` es un CLI para generar proyectos React + Vite listos para producción, con enfoque en velocidad de arranque, estructura clara y opciones de arquitectura.
+Welcome to the **create-lumen** wiki.
 
-## Contenido
+`create-lumen` is a CLI scaffolder for production-ready React + Vite projects, focused on a clean start and flexible architecture choices.
 
-- [Empezando](./Empezando)
-- [Instalación](./Instalación)
-- [Uso](./Uso)
-- [Contribuir](./Contribuir)
+### Pages
+
+- [Getting Started / Empezando](./Empezando)
+- [Installation / Instalación](./Instalación)
+- [Usage / Uso](./Uso)
+- [Contributing / Contribuir](./Contribuir)
 - [FAQ](./FAQ)
 
-## Qué es este proyecto
+### About this repository
 
-Este repositorio contiene el **scaffolder** (la herramienta CLI), no una aplicación generada.
+This repository contains the **scaffolder CLI**, not a generated app.
 
-Características principales:
+---
 
-- Elección de arquitectura (feature-based o component-based)
-- Soporte para JavaScript y TypeScript
-- Integración opcional de router, estado, testing y utilidades comunes
+## Español
 
-## Enlaces útiles
+Bienvenido/a a la wiki de **create-lumen**.
 
-- Repositorio: `Its-JrDev/create-lumen`
-- Wiki: <https://github.com/Its-JrDev/create-lumen/wiki>
-- README del proyecto: `README.md`
+`create-lumen` es un CLI para generar proyectos React + Vite listos para producción, con enfoque en un arranque limpio y opciones flexibles de arquitectura.
+
+### Páginas
+
+- [Getting Started / Empezando](./Empezando)
+- [Installation / Instalación](./Instalación)
+- [Usage / Uso](./Uso)
+- [Contributing / Contribuir](./Contribuir)
+- [FAQ](./FAQ)
+
+### Sobre este repositorio
+
+Este repositorio contiene el **scaffolder CLI**, no una app generada.

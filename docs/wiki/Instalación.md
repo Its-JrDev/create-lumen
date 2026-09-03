@@ -1,35 +1,65 @@
-# Instalación
+# Installation / Instalación
 
-## Opción recomendada: ejecutar desde npm
+## English
 
-No necesitas instalar globalmente para empezar:
+### Recommended option: run from npm
 
 ```bash
-npm create lumen mi-app
+npm create lumen my-app
 ```
 
-## Uso local (desarrollo del scaffolder)
-
-Si estás contribuyendo al propio `create-lumen`, puedes ejecutarlo desde este repositorio:
+### Local usage (scaffolder development)
 
 ```bash
 npm install
 node bin/cli.js
 ```
 
-## Instalación global para pruebas manuales
+### Global install for manual testing
+
+```bash
+npm link
+create-lumen my-app
+```
+
+### Notes
+
+- This repository is the scaffolder tool.
+- The app is created in the target folder.
+
+```bash
+# TODO: add team-specific setup commands (if needed)
+```
+
+---
+
+## Español
+
+### Opción recomendada: ejecutar desde npm
+
+```bash
+npm create lumen mi-app
+```
+
+### Uso local (desarrollo del scaffolder)
+
+```bash
+npm install
+node bin/cli.js
+```
+
+### Instalación global para pruebas manuales
 
 ```bash
 npm link
 create-lumen mi-app
 ```
 
-## Notas
+### Notas
 
 - Este repositorio es la herramienta generadora.
-- La app final se crea en la carpeta de destino (`mi-app` en los ejemplos).
-- Si tu entorno requiere pasos adicionales, documenta aquí los comandos específicos de tu equipo:
+- La app se crea en la carpeta de destino.
 
 ```bash
-# TODO: agregar configuración interna (si aplica)
+# TODO: agregar comandos internos del equipo (si aplica)
 ```

@@ -1,6 +1,39 @@
-# Uso
+# Usage / Uso
 
-## Comando base
+## English
+
+### Base command
+
+```bash
+npm create lumen <project-name>
+```
+
+Example:
+
+```bash
+npm create lumen my-app
+```
+
+### What the CLI does
+
+The CLI asks for project options (architecture, language, and optional integrations), then generates a starter structure in your target folder.
+
+### Run the generated app
+
+```bash
+cd my-app
+npm run dev
+```
+
+### Placeholder (advanced usage)
+
+> TODO: add confirmed advanced examples (supported flags, recommended option combos, team presets).
+
+---
+
+## Español
+
+### Comando base
 
 ```bash
 npm create lumen <nombre-del-proyecto>
@@ -12,25 +45,17 @@ Ejemplo:
 npm create lumen mi-app
 ```
 
-## Qué hace el CLI
+### Qué hace el CLI
 
-Durante la generación, el comando permite elegir opciones de proyecto (arquitectura, lenguaje y otras integraciones opcionales).
+El CLI solicita opciones del proyecto (arquitectura, lenguaje e integraciones opcionales) y genera una estructura inicial en la carpeta destino.
 
-Luego crea la estructura inicial del proyecto en la carpeta indicada.
-
-## Ejecutar la app generada
+### Ejecutar la app generada
 
 ```bash
 cd mi-app
 npm run dev
 ```
 
-## Consejos
+### Placeholder (uso avanzado)
 
-- Usa nombres de carpeta simples (sin espacios) para evitar problemas en scripts.
-- Si automatizas el scaffolding en CI o scripts internos, valida primero con una generación local.
-- Si necesitas un flujo 100% no interactivo, usa `-y` como punto de partida y ajusta según las capacidades actuales del CLI.
-
-## Placeholder para uso avanzado
-
-> TODO: añadir ejemplos avanzados confirmados por el equipo (flags soportados, combinaciones recomendadas, presets internos).
+> TODO: añadir ejemplos avanzados confirmados (flags soportados, combinaciones recomendadas, presets del equipo).
